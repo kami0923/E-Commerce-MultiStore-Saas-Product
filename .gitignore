@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.env
+.env.local
+*.log
+.DS_Store
+/generated/prisma
+/prisma/work/*.db
+/prisma/work/*.db-journal
+/backups
+

@@ -1,0 +1,15 @@
+"use client";
+
+import { useActionState } from "react";
+import { Check, Store } from "lucide-react";
+import { createStoreAction, type CommerceActionState } from "@/app/dashboard/actions";
+
+const initialState: CommerceActionState = { status: "idle" };
+
+export function StoreForm({ businesses }: { businesses: { id: string; name: string; baseCurrency: string }[] }) {
+  const [state, action, pending] = useActionState(createStoreAction, initialState);
+  return <form action={action} className="rounded-[28px] border border-[#e0e6e0] bg-white p-6 shadow-[0_12px_40px_rgba(16,35,26,.05)] sm:p-8"><div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-[#e8f1e3] text-[#164b36]"><Store className="size-5" /></span><div><h1 className="text-2xl font-black tracking-[-.04em]">Create a storefront</h1><p className="text-sm text-[#738078]">Add another isolated store to an existing merchant.</p></div></div><div className="mt-8 grid gap-5 sm:grid-cols-2"><Select label="Business" name="tenantId" options={businesses.map(item => [item.id,item.name])} /><Field label="Store name" name="name" placeholder="e.g. Northstar Shoes" error={state.errors?.name?.[0]} /><Select label="Vertical" name="vertical" options={[["CLOTHING","Clothing"],["SHOES","Shoes"],["JEWELLERY","Jewellery"],["COSMETICS","Cosmetics"],["MULTI_CATEGORY","Multi-category"]]} /><Select label="Currency" name="currency" options={[["PKR","PKR"],["USD","USD"]]} /><Select label="Default language" name="defaultLocale" options={[["en","English"],["ur","Urdu — اردو"]]} /><Select label="Theme" name="themeKey" options={[["atelier","Atelier"],["market","Modern Market"],["luxe","Luxe Editorial"]]} /></div>{state.message && <p className={`mt-6 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${state.status === 'success' ? 'bg-[#f1f8e7] text-[#4f7743]' : 'bg-[#fff0e9] text-[#a64f33]'}`}>{state.status === "success" && <Check className="size-4" />}{state.message}</p>}<button disabled={pending || businesses.length === 0} className="mt-8 h-12 w-full rounded-xl bg-[#164b36] text-sm font-black text-white disabled:opacity-50">{pending ? "Creating store…" : "Create draft store"}</button></form>;
+}
+
+function Field({label,error,...props}:{label:string;error?:string;name:string;placeholder:string}) { return <label><span className="text-xs font-bold text-[#536259]">{label}</span><input {...props} required className="mt-2 h-12 w-full rounded-xl border border-[#dce3dc] px-4 text-sm outline-none focus:border-[#7d9e7d]" />{error && <span className="mt-1.5 block text-xs font-semibold text-[#b6573a]">{error}</span>}</label>; }
+function Select({label,name,options}:{label:string;name:string;options:string[][]}) { return <label><span className="text-xs font-bold text-[#536259]">{label}</span><select name={name} className="mt-2 h-12 w-full rounded-xl border border-[#dce3dc] bg-white px-4 text-sm outline-none">{options.map(([value,text]) => <option key={value} value={value}>{text}</option>)}</select></label>; }
