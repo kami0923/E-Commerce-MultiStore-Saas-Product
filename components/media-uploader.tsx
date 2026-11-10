@@ -7,7 +7,7 @@ import { uploadMediaAction, type MediaActionState } from "@/app/dashboard/media/
 const initialState: MediaActionState = { status: "idle" };
 const maxFiles = 10;
 const maxFileBytes = 8 * 1024 * 1024;
-const maxBatchBytes = maxFiles * maxFileBytes;
+const maxBatchBytes = 4 * 1024 * 1024;
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 export function MediaUploader({ stores }: { stores: { id: string; tenantId: string; name: string; tenant: { name: string } }[] }) {
@@ -32,7 +32,7 @@ export function MediaUploader({ stores }: { stores: { id: string; tenantId: stri
       const totalBytes = selected.reduce((sum, file) => sum + file.size, 0);
       if (unsupported) error = `${unsupported.name} is not a supported JPG, PNG, WebP or GIF image.`;
       else if (oversized) error = `${oversized.name} is larger than 8 MB.`;
-      else if (totalBytes > maxBatchBytes) error = "The selected images are larger than the 80 MB batch limit.";
+      else if (totalBytes > maxBatchBytes) error = "The selected images are larger than the 4 MB production upload limit.";
     }
 
     setSelectionError(error);
@@ -44,7 +44,7 @@ export function MediaUploader({ stores }: { stores: { id: string; tenantId: stri
     <div className="grid gap-5 sm:grid-cols-2"><label className="text-xs font-bold text-[#526158]">Store<select name="storeId" value={storeId} onChange={event => setStoreId(event.target.value)} className="mt-2 h-12 w-full rounded-xl border border-[#dfe5df] bg-white px-4 text-sm outline-none" required>{stores.map(store => <option key={store.id} value={store.id}>{store.tenant.name} · {store.name}</option>)}</select></label><label className="text-xs font-bold text-[#526158]">Shared alt text <span className="font-normal text-[#96a098]">(optional)</span><input name="altText" className="mt-2 h-12 w-full rounded-xl border border-[#dfe5df] px-4 text-sm outline-none focus:border-[#7fa27d]" placeholder="Describe these images for accessibility" /></label></div>
     <div onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); if (inputRef.current) { inputRef.current.files = event.dataTransfer.files; receiveFiles(event.dataTransfer.files); } }} className="mt-5 rounded-[24px] border-2 border-dashed border-[#cbd6cb] bg-[#f7faf5] p-8 text-center transition hover:border-[#83a17e] hover:bg-[#f2f7ef]">
       <input ref={inputRef} onChange={event => receiveFiles(event.target.files)} className="sr-only" id="media-files" name="files" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
-      <label htmlFor="media-files" className="cursor-pointer"><span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#e7f0e2] text-[#164b36]"><UploadCloud className="size-6" /></span><p className="mt-4 font-black">Drop product images here</p><p className="mt-2 text-xs text-[#7a877e]">or click to browse · JPG, PNG, WebP or GIF · 8 MB each · up to 10</p></label>
+      <label htmlFor="media-files" className="cursor-pointer"><span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#e7f0e2] text-[#164b36]"><UploadCloud className="size-6" /></span><p className="mt-4 font-black">Drop product images here</p><p className="mt-2 text-xs text-[#7a877e]">or click to browse · JPG, PNG, WebP or GIF · 8 MB each · 4 MB total per upload</p></label>
     </div>
     {previews.length > 0 && <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">{previews.map(item => <div key={item.url} className="relative aspect-square overflow-hidden rounded-2xl bg-[#eef1ed]"><div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${item.url}')` }} /><span className="absolute inset-x-2 bottom-2 truncate rounded-lg bg-black/55 px-2 py-1 text-[10px] text-white backdrop-blur">{item.name}</span></div>)}</div>}
     {(selectionError || state.message) && <p aria-live="polite" className={`mt-5 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${!selectionError && state.status === "success" ? "bg-[#edf5df] text-[#4e7841]" : "bg-[#fff0e9] text-[#a95139]"}`}>{!selectionError && state.status === "success" ? <Check className="size-4" /> : <X className="size-4" />}{selectionError || state.message}</p>}

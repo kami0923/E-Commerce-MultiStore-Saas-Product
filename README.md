@@ -2,52 +2,53 @@
 
 Multi-tenant, multi-store commerce platform for Pakistan-first and international retail brands.
 
-## Foundation
+## Technology
 
-- Next.js App Router and TypeScript
+- Next.js App Router, React and TypeScript
 - Tailwind CSS design system
-- SQLite with Prisma for zero-cost local development; PostgreSQL-ready data model for production scale
-- Tenant and store scoped data model
-- Better Auth database sessions with invitation-only merchant onboarding
-- Capability-based roles, store assignments, secure invitation hashes, and audit events
-- Tenant-scoped product and hierarchical category management
-- Additive product variants with SKU-level pricing and stock records
-- Audited stock adjustments with reserved and available quantity protection
-- Manual order entry with database-calculated totals and stock reservation
-- Controlled order transitions from pending through fulfilment, cancellation, delivery, and refund
-- English/Urdu-ready locale fields
-- Clothing, shoes, jewellery, cosmetics, and multi-category verticals
+- PostgreSQL with Prisma ORM and pooled production connections
+- Better Auth database sessions and invitation-only merchant onboarding
+- Vercel Blob for durable production media uploads
+- Tenant-scoped catalogues, inventory, orders, roles, audit logs and storefronts
 
 ## Local setup
 
-1. Copy `.env.example` to `.env`. The default local SQLite database is free and needs no separate service.
-2. Install packages with `npm install`.
-3. Generate the database client with `npm run db:generate`.
-4. Initialize the free local database with `npm run db:bootstrap`.
-5. Start the app with `npm run dev`.
-6. Open `http://localhost:3000/setup` once to create the platform owner.
+1. Copy `.env.example` to `.env` and add your PostgreSQL connection details.
+2. Install packages: `npm install`
+3. Generate the Prisma client: `npm run db:generate`
+4. Apply database migrations: `npm run db:bootstrap`
+5. Start the app: `npm run dev`
+6. Open `http://localhost:3000/setup` once if a platform owner has not been created.
 
-Public account creation is disabled. The platform owner creates businesses and receives a secure, single-use owner invitation URL to share with each merchant. Invitations expire after 48 hours, and accepted users see only businesses, stores, navigation, and data allowed by their tenant memberships and roles.
+`DATABASE_URL` is the direct PostgreSQL connection used by Prisma commands. `DATABASE_URL_POOLED` is preferred by the running application when supplied. Never commit `.env` files or database credentials.
 
-Products and variants are append-only operational records. Existing products are never hard-deleted; they can be archived so order, inventory, and audit history remains intact.
+Public account creation is disabled. The platform owner creates merchant businesses and shares secure, single-use owner invitation URLs. Invitations expire after 48 hours. Products and variants are preserved as operational history and are archived instead of being hard-deleted.
 
-## Merchant WhatsApp Business linking
+## Deploy to Vercel
 
-Every store can link its own WhatsApp Business account from **Dashboard → WhatsApp Business**. Linking uses Meta Embedded Signup, verifies the selected phone number on the server, encrypts the access token with AES-256-GCM, and records connect, verify, and disconnect events in the tenant audit log. WhatsApp notifications use the account belonging to the order's store; an optional platform fallback sender can be configured separately.
+1. Import the GitHub repository into Vercel.
+2. Add the environment variables listed in `.env.example` to the Vercel project.
+3. Set `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL` to the final HTTPS deployment URL.
+4. Set `DATABASE_URL` to the direct Prisma Postgres URL and `DATABASE_URL_POOLED` to its pooled URL.
+5. Create and connect a Vercel Blob store so Vercel supplies `BLOB_READ_WRITE_TOKEN`.
+6. Deploy. The `postinstall` script generates the Prisma client during the build.
 
-For an existing local database, run `npm run db:migrate:whatsapp`. Then create a Meta Business app with WhatsApp Embedded Signup and configure these hosting secrets:
+The product images already stored under `public/uploads` are included in the deployment. New production uploads are saved to Vercel Blob. Upload submissions are limited to 4 MB total to remain within the server request limit.
 
-- `META_APP_ID` and `NEXT_PUBLIC_META_APP_ID`
-- `META_APP_SECRET` (server only)
-- `META_WHATSAPP_CONFIG_ID` and `NEXT_PUBLIC_META_WHATSAPP_CONFIG_ID`
-- `APP_ENCRYPTION_KEY` (a base64 or hex encoded 32-byte key)
-- `WHATSAPP_GRAPH_VERSION`
+See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for the complete launch checklist.
 
-Add the production HTTPS domain to the Meta app's allowed domains. Never commit the app secret, encryption key, or merchant access tokens.
+## WhatsApp Business linking
+
+Each store can link its own WhatsApp Business account from **Dashboard → WhatsApp Business**. Production linking requires the Meta and encryption settings documented in `.env.example`. Merchant tokens are encrypted and scoped to their store.
 
 ## Validation
 
-- `npm run db:validate`
-- `npm run typecheck`
-- `npm run lint`
-- `npm run build`
+Run these checks before every production release:
+
+```bash
+npm run db:validate
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```

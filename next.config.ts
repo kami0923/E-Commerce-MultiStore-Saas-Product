@@ -7,9 +7,8 @@ const nextConfig: NextConfig = {
   // race to create them. A single worker keeps local and CI builds deterministic.
   experimental: {
     cpus: 1,
-    // The media library accepts up to ten 8 MB images in one submission.
-    // Leave a small allowance for multipart field metadata and boundaries.
-    serverActions: { bodySizeLimit: "85mb" },
+    // Keep media submissions below Vercel Functions' request-body ceiling.
+    serverActions: { bodySizeLimit: "4.25mb" },
   },
   async headers() {
     return [{ source: "/:path*", headers: [
