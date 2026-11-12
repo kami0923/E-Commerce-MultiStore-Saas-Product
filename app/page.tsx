@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, Boxes, Check, ChevronRight, Globe2, LockKeyhole, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, Store, UsersRound } from "lucide-react";
+import { ArrowUpRight, ArrowRight, BarChart3, Boxes, Check, ChevronRight, Globe2, LockKeyhole, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, Store, UsersRound } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { getMarketplaceStores } from "@/data/marketplace";
 
 const capabilities = [
   { icon: Store, number: "01", title: "Launch any retail vertical", text: "Clothing, footwear, jewellery, cosmetics, or a composed multi-category storefront—without rebuilding the operating system." },
@@ -15,7 +16,17 @@ const operations = [
   { icon: BarChart3, label: "Intelligence", detail: "Revenue, inventory and performance visibility" },
 ];
 
-export default function HomePage() {
+const marketplaceFallback: Record<string, string> = {
+  CLOTHING: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1200&q=86",
+  SHOES: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=86",
+  JEWELLERY: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1200&q=86",
+  COSMETICS: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1200&q=86",
+  MULTI_CATEGORY: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=86",
+};
+
+export default async function HomePage() {
+  const stores = await getMarketplaceStores();
+  const categories = [...new Set(stores.map(store => store.vertical))];
   return (
     <main className="min-h-screen overflow-hidden bg-[#f3f3ed] text-[#10231a]">
       <div className="relative border-b border-[#d8ddd5]">
@@ -27,12 +38,13 @@ export default function HomePage() {
         <nav className="relative mx-auto flex h-24 max-w-[1480px] items-center justify-between px-5 sm:px-8 lg:px-12">
           <BrandMark />
           <div className="hidden items-center gap-9 text-[13px] font-bold text-[#657269] lg:flex">
+            <a href="#brands" className="transition hover:text-[#10231a]">Shop brands</a>
             <a href="#platform" className="transition hover:text-[#10231a]">Platform</a>
             <a href="#operations" className="transition hover:text-[#10231a]">Operations</a>
             <a href="#architecture" className="transition hover:text-[#10231a]">Architecture</a>
           </div>
-          <Link href="/dashboard" className="group inline-flex h-12 items-center gap-3 rounded-full bg-[#10231a] px-5 text-sm font-black text-white shadow-[0_12px_30px_rgba(16,35,26,.15)] transition hover:-translate-y-0.5 hover:bg-[#174632]">
-            Open workspace <span className="grid size-7 place-items-center rounded-full bg-white/10"><ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span>
+          <Link href="/sign-in" className="group inline-flex h-12 items-center gap-3 rounded-full bg-[#10231a] px-5 text-sm font-black text-white shadow-[0_12px_30px_rgba(16,35,26,.15)] transition hover:-translate-y-0.5 hover:bg-[#174632]">
+            Merchant login <span className="grid size-7 place-items-center rounded-full bg-white/10"><ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span>
           </Link>
         </nav>
 
@@ -48,9 +60,9 @@ export default function HomePage() {
               Build distinctive online stores while managing every tenant, team, catalogue, order, and market from one secure command center.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Link href="/dashboard" className="group inline-flex h-14 items-center gap-3 rounded-full bg-[#c9f269] px-6 text-sm font-black text-[#10231a] shadow-[0_14px_34px_rgba(120,158,47,.22)] transition hover:-translate-y-0.5 hover:bg-[#d3fa79]">
-                Enter the platform <ArrowRight className="size-4 transition group-hover:translate-x-1" />
-              </Link>
+              <a href="#brands" className="group inline-flex h-14 items-center gap-3 rounded-full bg-[#c9f269] px-6 text-sm font-black text-[#10231a] shadow-[0_14px_34px_rgba(120,158,47,.22)] transition hover:-translate-y-0.5 hover:bg-[#d3fa79]">
+                Explore live brands <ArrowRight className="size-4 transition group-hover:translate-x-1" />
+              </a>
               <a href="#platform" className="inline-flex h-14 items-center gap-2 rounded-full border border-[#ccd4cc] bg-white/65 px-6 text-sm font-black transition hover:bg-white">
                 Explore capabilities <ChevronRight className="size-4" />
               </a>
@@ -100,6 +112,13 @@ export default function HomePage() {
           </div>
         </section>
       </div>
+
+      <section id="brands" className="border-b border-[#d8ded7] bg-[#eef0e9] px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+        <div className="mx-auto max-w-[1480px]">
+          <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end"><div><p className="text-[11px] font-black uppercase tracking-[.2em] text-[#53715f]">The Meridian marketplace</p><h2 className="mt-5 max-w-4xl text-4xl font-black leading-[.98] tracking-[-.055em] sm:text-6xl">Independent brands.<br /><span className="font-serif font-normal italic text-[#47765d]">One beautiful destination.</span></h2></div><div className="max-w-lg"><p className="text-sm leading-7 text-[#68756d]">Every active storefront created by Meridian appears here automatically. Visitors can discover a brand, browse its public website, and shop without entering a merchant dashboard.</p><div className="mt-5 flex flex-wrap gap-2">{categories.map(category => <span key={category} className="rounded-full border border-[#cfd7cf] bg-white/65 px-3 py-2 text-[10px] font-black uppercase tracking-[.1em] text-[#52665a]">{category.toLowerCase().replaceAll("_", " ")}</span>)}</div></div></div>
+          {stores.length > 0 ? <div className="mt-14 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{stores.map((store, index) => { const image = store.products.flatMap(product => product.media).map(item => item.mediaAsset.url)[0] ?? marketplaceFallback[store.vertical]; return <Link key={store.id} href={`/store/${store.slug}`} className={`group relative min-h-[480px] overflow-hidden rounded-[30px] bg-[#17382a] shadow-[0_22px_60px_rgba(16,35,26,.1)] ${index === 0 ? "xl:col-span-2" : ""}`}><div className="absolute inset-0 bg-cover bg-center transition duration-1000 group-hover:scale-[1.045]" style={{ backgroundImage: `url('${image}')` }} /><div className="absolute inset-0 bg-gradient-to-t from-[#07130d]/90 via-[#07130d]/15 to-transparent" /><div className="absolute inset-x-0 top-0 flex items-center justify-between p-5"><span className="rounded-full border border-white/20 bg-black/15 px-3 py-2 text-[9px] font-black uppercase tracking-[.16em] text-white backdrop-blur">{store.vertical.toLowerCase().replaceAll("_", " ")}</span><span className="grid size-11 place-items-center rounded-full bg-white text-[#10231a] transition duration-300 group-hover:rotate-45 group-hover:scale-105"><ArrowUpRight className="size-4" /></span></div><div className="absolute inset-x-0 bottom-0 p-7 text-white sm:p-8"><p className="text-[10px] font-black uppercase tracking-[.2em] text-white/55">{store.name} · {store.currency}</p><h3 className="mt-3 font-serif text-4xl sm:text-5xl">{store.tenant.name}</h3><div className="mt-6 flex items-center gap-5 border-t border-white/15 pt-5 text-[10px] font-bold text-white/55"><span>{store._count.products} products</span><span>{store._count.categories} collections</span><span>{store.themeKey} design</span></div></div></Link>; })}</div> : <div className="mt-14 rounded-[30px] border border-dashed border-[#bfcbbf] bg-white/55 p-12 text-center"><Store className="mx-auto size-7 text-[#51705e]" /><h3 className="mt-5 text-2xl font-black">The first storefront is being prepared.</h3><p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#6b786f]">Published stores will appear in this marketplace automatically as soon as a Meridian super administrator activates them.</p></div>}
+        </div>
+      </section>
 
       <section id="platform" className="mx-auto max-w-[1480px] px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
         <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr] lg:gap-20">

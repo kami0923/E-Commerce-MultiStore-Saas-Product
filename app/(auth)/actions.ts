@@ -72,7 +72,46 @@ export async function signInAction(_state: AuthActionState, formData: FormData):
   }
 
   try {
-    await auth.api.signInEmail({ headers: await headers(), body: validated.data });
+    const result = await auth.api.signInEmail({ headers: await headers(), body: validated.data });
+    const storeSlug = typeof formData.get("storeSlug") === "string" ? String(formData.get("storeSlug")) : null;
+
+    if (storeSlug) {
+      const account = await db.user.findUnique({
+        where: { id: result.user.id },
+        select: {
+          platformRole: true,
+          memberships: {
+            where: { active: true },
+            select: { tenantId: true, role: true },
+          },
+        },
+      });
+      const store = await db.store.findFirst({
+        where: { slug: storeSlug, status: { not: "ARCHIVED" } },
+        select: {
+          tenantId: true,
+          access: { where: { userId: result.user.id }, select: { id: true } },
+        },
+      });
+      const membership = store
+        ? account?.memberships.find((item) => item.tenantId === store.tenantId)
+        : null;
+      const allowed =
+        account?.platformRole === "SUPER_ADMIN" ||
+        Boolean(
+          membership &&
+            (["OWNER", "ADMIN"].includes(membership.role) || store?.access.length),
+        );
+
+      if (!allowed) {
+        await db.session.deleteMany({ where: { token: result.token } });
+        return {
+          status: "error",
+          message:
+            "This account is not assigned to the selected store. Ask the business owner to invite you or choose your correct store.",
+        };
+      }
+    }
   } catch {
     return { status: "error", message: "The email or password is incorrect." };
   }

@@ -52,3 +52,28 @@ a {
 .delay-1 { animation-delay: 70ms; }
 .delay-2 { animation-delay: 140ms; }
 .delay-3 { animation-delay: 210ms; }
+
+.storefront[data-theme="market"] .storefront-header {
+  box-shadow: 0 10px 35px rgba(16, 35, 26, 0.05);
+}
+
+.storefront[data-theme="market"] .storefront-hero {
+  max-width: 1480px;
+}
+
+.storefront[data-theme="luxe"] .storefront-header {
+  border-color: rgba(61, 43, 29, 0.18);
+}
+
+.storefront[data-theme="luxe"] .storefront-hero h1 {
+  letter-spacing: -0.055em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

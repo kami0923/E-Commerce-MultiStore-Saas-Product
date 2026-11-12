@@ -10,10 +10,12 @@ export function AuthForm({
   action,
   mode,
   redirectTo,
+  storeSlug,
 }: {
   action: (state: AuthActionState, formData: FormData) => Promise<AuthActionState>;
   mode: "setup" | "sign-in";
   redirectTo?: string;
+  storeSlug?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const setup = mode === "setup";
@@ -21,6 +23,7 @@ export function AuthForm({
   return (
     <form action={formAction} className="space-y-5">
       {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
+      {storeSlug && <input type="hidden" name="storeSlug" value={storeSlug} />}
       {setup && <Field icon={UserRound} label="Full name" name="name" placeholder="Your name" error={state.errors?.name?.[0]} />}
       <Field icon={Mail} label="Email address" name="email" type="email" placeholder="you@company.com" error={state.errors?.email?.[0]} />
       <Field icon={LockKeyhole} label="Password" name="password" type="password" placeholder="At least 12 characters" error={state.errors?.password?.[0]} />
