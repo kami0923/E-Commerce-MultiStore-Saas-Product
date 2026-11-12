@@ -17,6 +17,8 @@ export type CommerceActionState = {
 };
 
 const vertical = z.enum(["CLOTHING", "SHOES", "JEWELLERY", "COSMETICS", "MULTI_CATEGORY"]);
+const storefrontTheme = z.enum(["atelier", "market", "luxe"]);
+const storefrontThemeRotation = ["atelier", "market", "luxe"] as const;
 
 const businessSchema = z.object({
   name: z.string().trim().min(2, "Enter a business name.").max(100),
@@ -33,7 +35,7 @@ const storeSchema = z.object({
   vertical,
   currency: z.enum(["PKR", "USD"]),
   defaultLocale: z.enum(["en", "ur"]),
-  themeKey: z.enum(["atelier", "market", "luxe"]),
+  themeKey: storefrontTheme,
 });
 
 const storeStatusSchema = z.object({
@@ -79,6 +81,7 @@ export async function createBusinessAction(_state: CommerceActionState, formData
   if (!initialPlan) return { status: "error", message: `No active subscription supports ${verticals.length} stores in this market.` };
   const { token, tokenHash } = generateInvitationToken();
   const tenantSlug = slugify(name);
+  const existingStoreCount = await db.store.count();
 
   try {
     await db.$transaction(async (tx) => {
@@ -98,7 +101,7 @@ export async function createBusinessAction(_state: CommerceActionState, formData
             defaultLocale,
             enabledLocales: ["en", "ur"],
             status: "ACTIVE",
-            themeKey: index % 2 === 0 ? "atelier" : "market",
+            themeKey: storefrontThemeRotation[(existingStoreCount + index) % storefrontThemeRotation.length],
           },
         }));
       }

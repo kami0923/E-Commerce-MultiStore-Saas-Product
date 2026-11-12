@@ -1,18 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function StorefrontProductGallery({ images, productName }: { images: string[]; productName: string }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const selectedImage = images[selectedIndex] ?? images[0];
+  const [paused, setPaused] = useState(false);
 
-  return <div>
+  useEffect(() => {
+    if (paused || images.length < 2) return;
+    const timer = window.setInterval(() => setSelectedIndex(current => (current + 1) % images.length), 5000);
+    return () => window.clearInterval(timer);
+  }, [images.length, paused]);
+
+  const showPrevious = () => setSelectedIndex(current => (current - 1 + images.length) % images.length);
+  const showNext = () => setSelectedIndex(current => (current + 1) % images.length);
+
+  return <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)}>
     <div
-      role="img"
-      aria-label={`${productName}, image ${selectedIndex + 1} of ${images.length}`}
-      className="relative min-h-[520px] bg-[#e6dfd5] bg-cover bg-center sm:min-h-[680px] lg:min-h-[720px]"
-      style={{ backgroundImage: `url('${selectedImage}')` }}
+      role="group"
+      aria-label={`${productName} image gallery`}
+      className="storefront-product-gallery relative min-h-[520px] overflow-hidden bg-[#e6dfd5] sm:min-h-[680px] lg:min-h-[720px]"
     >
+      {images.map((image, index) => <div
+        key={image}
+        role="img"
+        aria-label={`${productName}, image ${index + 1} of ${images.length}`}
+        aria-hidden={selectedIndex !== index}
+        className={`absolute inset-0 bg-cover bg-center transition duration-700 ease-out ${selectedIndex === index ? "scale-100 opacity-100" : "scale-[1.025] opacity-0"}`}
+        style={{ backgroundImage: `url('${image}')` }}
+      />)}
+      {images.length > 1 && <div className="absolute inset-x-4 top-1/2 z-10 flex -translate-y-1/2 justify-between">
+        <button type="button" onClick={showPrevious} aria-label="Previous product image" className="grid size-11 place-items-center rounded-full bg-white/90 shadow-lg backdrop-blur transition hover:scale-105 hover:bg-white"><ArrowLeft className="size-4" /></button>
+        <button type="button" onClick={showNext} aria-label="Next product image" className="grid size-11 place-items-center rounded-full bg-white/90 shadow-lg backdrop-blur transition hover:scale-105 hover:bg-white"><ArrowRight className="size-4" /></button>
+      </div>}
       <span className="absolute bottom-4 right-4 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-[.12em] text-black/55 backdrop-blur">
         {selectedIndex + 1} / {images.length}
       </span>
