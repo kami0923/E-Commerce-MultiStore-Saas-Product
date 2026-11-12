@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, ArrowRight, BarChart3, Boxes, Check, ChevronRight, Globe2, LockKeyhole, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, Store, UsersRound } from "lucide-react";
+import { ArrowUpRight, ArrowRight, BarChart3, Boxes, Check, ChevronRight, Globe2, ShieldCheck, ShoppingBag, Sparkles, Store, UsersRound } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { getMarketplaceStores } from "@/data/marketplace";
 
@@ -72,43 +72,45 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="animate-enter delay-2 relative mx-auto w-full max-w-[800px] lg:ml-auto">
+          <div className="animate-enter delay-2 relative mx-auto w-full max-w-[820px] lg:ml-auto">
             <div className="absolute -inset-5 -z-10 rotate-2 rounded-[46px] bg-[#c9f269]/30 blur-2xl" />
             <div className="overflow-hidden rounded-[34px] border border-white/80 bg-[#10231a] p-2.5 shadow-[0_45px_100px_rgba(16,35,26,.28)]">
-              <div className="flex min-h-[590px] overflow-hidden rounded-[26px] bg-[#f8f9f5]">
-                <aside className="hidden w-[170px] shrink-0 flex-col bg-[#17382a] p-5 text-white sm:flex">
-                  <div className="flex items-center gap-2.5"><span className="grid size-8 place-items-center rounded-xl bg-[#c9f269] text-xs font-black text-[#10231a]">M</span><span className="text-xs font-black tracking-wide">MERIDIAN</span></div>
-                  <div className="mt-9 rounded-2xl border border-white/10 bg-white/7 p-3"><p className="text-[9px] uppercase tracking-[.15em] text-white/45">Workspace</p><p className="mt-2 text-xs font-bold">Northstar Co.</p><p className="mt-1 text-[9px] text-[#c9f269]">4 stores active</p></div>
-                  <div className="mt-7 space-y-2 text-[10px] font-semibold text-white/50">
-                    {["Overview", "Stores", "Catalog", "Inventory", "Orders", "Analytics"].map((item, index) => <div key={item} className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 ${index === 0 ? "bg-white/10 text-white" : ""}`}><span className={`size-1.5 rounded-full ${index === 0 ? "bg-[#c9f269]" : "bg-white/20"}`} />{item}</div>)}
+              <div className="overflow-hidden rounded-[26px] bg-[#f8f9f5]">
+                <div className="flex flex-col gap-5 border-b border-[#dfe5dd] px-5 py-6 sm:flex-row sm:items-end sm:justify-between sm:px-7">
+                  <div>
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[.18em] text-[#52705e]"><span className="size-2 rounded-full bg-[#8fc655] shadow-[0_0_0_5px_rgba(143,198,85,.13)]" /> Live on Meridian</div>
+                    <h2 className="mt-3 text-2xl font-black tracking-[-.045em] sm:text-3xl">Official storefronts</h2>
+                    <p className="mt-2 text-xs leading-5 text-[#748078]">Choose a brand and enter its public website.</p>
                   </div>
-                  <div className="mt-auto rounded-2xl bg-[#c9f269] p-3 text-[#10231a]"><p className="text-[9px] font-black uppercase tracking-[.12em]">System health</p><p className="mt-1 text-[11px] font-bold">Everything is steady</p></div>
-                </aside>
-
-                <div className="min-w-0 flex-1 p-5 sm:p-7">
-                  <div className="flex items-center justify-between gap-3">
-                    <div><p className="text-[10px] font-black uppercase tracking-[.2em] text-[#8b978f]">Monday, 10 November</p><h2 className="mt-2 text-2xl font-black tracking-[-.045em] sm:text-3xl">Good morning, Kamran.</h2></div>
-                    <span className="hidden rounded-full border border-[#dce2da] bg-white px-3 py-2 text-[10px] font-bold text-[#647168] sm:block">EN · PKR</span>
-                  </div>
-                  <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                    {[["Revenue", "PKR 4.82M", "+18.4%"], ["Orders", "1,284", "+12.1%"], ["Stores", "4", "All live"], ["Low stock", "23", "Review"]].map(([label, value, trend], index) => <div key={label} className="rounded-2xl border border-[#e0e5df] bg-white p-4 shadow-[0_10px_25px_rgba(20,50,34,.035)]"><p className="text-[10px] font-bold text-[#89948d]">{label}</p><p className="mt-2 text-lg font-black tracking-[-.04em]">{value}</p><p className={`mt-2 text-[9px] font-black ${index === 3 ? "text-[#c36b3e]" : "text-[#4d7e47]"}`}>{trend}</p></div>)}
-                  </div>
-                  <div className="mt-3 grid gap-3 lg:grid-cols-[1.45fr_.75fr]">
-                    <div className="rounded-[22px] bg-white p-5 shadow-[0_10px_30px_rgba(20,50,34,.04)] ring-1 ring-[#e1e6e0]">
-                      <div className="flex items-center justify-between"><div><p className="text-[10px] font-bold text-[#89948d]">Revenue performance</p><p className="mt-1 text-sm font-black">All stores · 30 days</p></div><span className="rounded-full bg-[#edf6d8] px-2.5 py-1 text-[9px] font-black text-[#4d713d]">Healthy</span></div>
-                      <div className="mt-8 flex h-36 items-end gap-2 border-b border-[#e7ebe6]">{[31,46,39,58,52,74,65,87,72,82,96,89].map((height, index) => <span key={index} className="flex-1 rounded-t-md bg-[#79a95e]" style={{ height: `${height}%`, opacity: .5 + index * .035 }} />)}</div>
-                      <div className="mt-3 flex justify-between text-[8px] font-bold uppercase tracking-[.1em] text-[#9aa39d]"><span>01 Nov</span><span>Today</span></div>
-                    </div>
-                    <div className="rounded-[22px] bg-[#17382a] p-5 text-white shadow-[0_14px_30px_rgba(16,35,26,.14)]">
-                      <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#c9f269]">Live network</p><p className="mt-3 text-xl font-black tracking-[-.04em]">Four brands.<br />One clear view.</p>
-                      <div className="mt-7 space-y-3">{["Atelier PK", "Nova Shoes", "Aurelia", "Serein Beauty"].map((store, index) => <div key={store} className="flex items-center justify-between border-b border-white/10 pb-2.5 text-[10px]"><span className="text-white/65">{store}</span><span className={`size-2 rounded-full ${index === 2 ? "bg-[#f2c96d]" : "bg-[#c9f269]"}`} /></div>)}</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between rounded-2xl border border-[#dce2dc] bg-[#eef2eb] px-4 py-3"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl bg-white text-[#315a45]"><PackageCheck className="size-4" /></span><div><p className="text-[10px] font-black">Orders are moving</p><p className="mt-0.5 text-[9px] text-[#7d8981]">18 ready for fulfilment</p></div></div><ArrowRight className="size-4 text-[#617067]" /></div>
+                  <div className="rounded-2xl bg-[#eaf4d2] px-4 py-3 text-left sm:text-right"><p className="text-2xl font-black leading-none text-[#315a45]">{stores.length}</p><p className="mt-1 text-[9px] font-black uppercase tracking-[.12em] text-[#69805f]">public stores</p></div>
                 </div>
+
+                {stores.length > 0 ? (
+                  <div className="grid max-h-[575px] gap-3 overflow-y-auto p-4 sm:grid-cols-2 sm:p-5">
+                    {stores.map((store, index) => {
+                      const image = store.products.flatMap(product => product.media).map(item => item.mediaAsset.url)[0] ?? marketplaceFallback[store.vertical];
+                      return (
+                        <Link key={store.id} href={`/store/${store.slug}`} className={`group relative min-h-[245px] overflow-hidden rounded-[22px] bg-[#17382a] text-white shadow-[0_12px_28px_rgba(16,35,26,.1)] ${index === 0 ? "sm:col-span-2 sm:min-h-[285px]" : ""}`}>
+                          <div className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover:scale-105" style={{ backgroundImage: `url('${image}')` }} />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#07130d]/95 via-[#07130d]/25 to-black/10" />
+                          <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
+                            <span className="rounded-full border border-white/20 bg-black/20 px-3 py-2 text-[8px] font-black uppercase tracking-[.14em] backdrop-blur">{store.vertical.toLowerCase().replaceAll("_", " ")}</span>
+                            <span className="grid size-9 place-items-center rounded-full bg-white text-[#10231a] transition group-hover:rotate-45"><ArrowUpRight className="size-4" /></span>
+                          </div>
+                          <div className="absolute inset-x-0 bottom-0 p-5">
+                            <p className="text-[9px] font-black uppercase tracking-[.16em] text-white/60">Official Meridian store · {store.currency}</p>
+                            <h3 className="mt-2 font-serif text-3xl leading-none">{store.name}</h3>
+                            <div className="mt-4 flex items-center justify-between border-t border-white/15 pt-3 text-[9px] font-bold text-white/65"><span>{store.tenant.name}</span><span className="inline-flex items-center gap-1.5 text-white">Visit store <ArrowRight className="size-3" /></span></div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="grid min-h-[420px] place-items-center p-8 text-center"><div><Store className="mx-auto size-8 text-[#52705e]" /><h3 className="mt-5 text-xl font-black">No public stores are live yet.</h3><p className="mt-2 text-sm text-[#748078]">Activated storefronts will appear here automatically.</p></div></div>
+                )}
               </div>
             </div>
-            <div className="absolute -bottom-7 -left-4 hidden items-center gap-3 rounded-2xl border border-white bg-white/90 px-4 py-3 shadow-[0_18px_45px_rgba(16,35,26,.15)] backdrop-blur sm:flex"><span className="grid size-9 place-items-center rounded-xl bg-[#eaf4d2] text-[#315a45]"><LockKeyhole className="size-4" /></span><div><p className="text-[10px] font-black">Tenant boundary verified</p><p className="mt-0.5 text-[9px] text-[#78857d]">Every request, every store</p></div></div>
           </div>
         </section>
       </div>
