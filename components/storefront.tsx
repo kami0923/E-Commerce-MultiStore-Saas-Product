@@ -1,11 +1,12 @@
 import type { CSSProperties, ReactNode } from "react";
-import { ArrowRight, Heart, Mail, MapPin, Menu, Phone, Search, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, Heart, Mail, MapPin, Phone, Search, ShieldCheck, Truck } from "lucide-react";
 import Link from "next/link";
 import { CartTrigger, ProductPurchase, StorefrontCartProvider } from "@/components/storefront-cart";
 import { StorefrontCatalog } from "@/components/storefront-catalog";
 import { StorefrontCheckout } from "@/components/storefront-checkout";
 import { StorefrontProductGallery } from "@/components/storefront-product-gallery";
 import { StorefrontHeroSlider } from "@/components/storefront-hero-slider";
+import { StorefrontMobileMenu } from "@/components/storefront-mobile-menu";
 import { OrderTracker } from "@/components/order-tracker";
 import { formatMoney } from "@/lib/utils";
 
@@ -133,7 +134,7 @@ function StoreShell({ store, preview, children }: { store: StorefrontData; previ
     <div className="storefront-announcement"><span>{config.eyebrow}</span><span>Secure checkout · {store.currency}</span></div>
     <header className="storefront-header sticky top-0 z-20 border-b border-black/10 bg-[var(--store-soft)]/90 backdrop-blur-2xl">
       <div className="storefront-header-inner mx-auto flex h-[76px] max-w-[1440px] items-center px-4 sm:h-24 sm:px-8 lg:px-10">
-        <details className="group relative mr-4 lg:hidden"><summary aria-label="Open menu" className="grid size-10 cursor-pointer list-none place-items-center rounded-full border border-black/15"><Menu className="size-4" /></summary><div className="absolute left-0 top-12 w-52 rounded-2xl border border-black/10 bg-white p-2 shadow-xl">{nav.map(([label, page]) => <Link key={page} href={`${base}/${page}` as never} className="block rounded-xl px-4 py-3 text-sm font-bold hover:bg-black/5">{label}</Link>)}</div></details>
+        <StorefrontMobileMenu base={base} brand={store.tenant.name} descriptor={config.descriptor} navigation={nav} />
         <Link href={base as never} className="storefront-brand min-w-0"><p className="truncate font-serif text-xl font-semibold tracking-[.04em] sm:text-2xl">{store.tenant.name}</p><p className="mt-0.5 text-[9px] font-bold uppercase tracking-[.28em] opacity-55">{config.descriptor}</p></Link>
         <nav className="storefront-nav ml-12 hidden items-center gap-1 text-[11px] font-black uppercase tracking-[.13em] lg:flex">{nav.map(([label, page]) => <Link key={page} href={`${base}/${page}` as never} className="rounded-full px-4 py-3 transition">{label}</Link>)}</nav>
         <div className="storefront-actions ml-auto flex items-center gap-2"><Link href={`${base}/shop` as never} aria-label="Search products" className="grid size-10 place-items-center rounded-full transition"><Search className="size-[18px]" /></Link><CartTrigger /></div>

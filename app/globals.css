@@ -89,6 +89,29 @@ a {
   box-shadow: 0 10px 25px rgb(20 35 25 / 8%);
 }
 
+.storefront-menu-trigger:hover,
+.storefront-menu-trigger:focus-visible {
+  background: color-mix(in srgb, white 78%, var(--store-highlight));
+  color: var(--store-ink);
+}
+
+.storefront-mobile-menu-panel {
+  animation: storefront-menu-in .28s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.storefront-mobile-menu-panel nav a:hover,
+.storefront-mobile-menu-panel nav a:focus-visible {
+  border-color: color-mix(in srgb, var(--store-accent) 35%, transparent);
+  background: white;
+  color: var(--store-accent);
+  box-shadow: 0 14px 35px rgb(20 35 25 / 9%);
+}
+
+@keyframes storefront-menu-in {
+  from { opacity: 0; transform: translateX(-1.5rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .storefront-collection-card::after {
   position: absolute;
   inset: 0;
@@ -379,6 +402,24 @@ a {
 
   .storefront-brand {
     max-width: calc(100vw - 9.5rem);
+  }
+
+  .storefront-product-card {
+    background: rgb(255 255 255 / 58%);
+    box-shadow: 0 18px 44px rgb(20 35 25 / 8%);
+  }
+
+  .storefront-product-quick-add {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .storefront-product-card:active {
+    transform: scale(.99);
+  }
+
+  .storefront-cart-drawer {
+    max-width: 100%;
   }
 
   .storefront-hero-title {
