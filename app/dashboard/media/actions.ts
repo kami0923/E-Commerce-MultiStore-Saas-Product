@@ -1,13 +1,16 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { del as deleteBlob, put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireTenantPermission } from "@/data/auth";
 import { db } from "@/lib/db";
+import {
+  deleteStoredMediaObject,
+  resolveMediaStorageConfiguration,
+  storeMediaObject,
+  type StoredMediaObject,
+} from "@/lib/media-storage";
 
 export type MediaActionState = { status: "idle" | "success" | "error"; message?: string };
 const allowedTypes: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
@@ -28,33 +31,22 @@ export async function uploadMediaAction(_state: MediaActionState, formData: Form
   const scope = await requireTenantPermission(tenantId, "products.manage", storeId);
   const store = await db.store.findFirst({ where: { id: storeId, tenantId }, select: { id: true, name: true } });
   if (!store) return { status: "error", message: "The selected store is unavailable." };
-  const useBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-  if (process.env.VERCEL && !useBlob) return { status: "error", message: "Connect a Vercel Blob store before uploading production images." };
-  const directory = path.join(process.cwd(), "public", "uploads", tenantId, storeId);
-  if (!useBlob) await mkdir(directory, { recursive: true });
-  const written: { kind: "blob" | "file"; location: string }[] = [];
+  const storage = resolveMediaStorageConfiguration();
+  if (!storage.ready) return { status: "error", message: storage.message };
+  const written: StoredMediaObject[] = [];
 
   try {
     await db.$transaction(async tx => {
       for (const file of files) {
         const filename = `${randomUUID()}.${allowedTypes[file.type]}`;
-        let url: string;
-        if (useBlob) {
-          const blob = await put(`uploads/${tenantId}/${storeId}/${filename}`, file, { access: "public", addRandomSuffix: false, contentType: file.type });
-          url = blob.url;
-          written.push({ kind: "blob", location: blob.url });
-        } else {
-          const diskPath = path.join(directory, filename);
-          await writeFile(diskPath, Buffer.from(await file.arrayBuffer()));
-          url = `/uploads/${tenantId}/${storeId}/${filename}`;
-          written.push({ kind: "file", location: diskPath });
-        }
-        await tx.mediaAsset.create({ data: { tenantId, storeId, filename, originalName: file.name.slice(0, 180), mimeType: file.type, sizeBytes: file.size, url, altText: altText || file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ") } });
+        const stored = await storeMediaObject({ tenantId, storeId, filename, contentType: file.type, bytes: Buffer.from(await file.arrayBuffer()) });
+        written.push(stored);
+        await tx.mediaAsset.create({ data: { tenantId, storeId, filename, originalName: file.name.slice(0, 180), mimeType: file.type, sizeBytes: file.size, url: stored.url, altText: altText || file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ") } });
       }
       await tx.auditLog.create({ data: { tenantId, storeId, actorId: scope.user.id, action: "media.uploaded", entityType: "MediaAsset", summary: `Uploaded ${files.length} image${files.length === 1 ? "" : "s"} to ${store.name}` } });
     });
   } catch {
-    await Promise.all(written.map(item => item.kind === "blob" ? deleteBlob(item.location).catch(() => undefined) : unlink(item.location).catch(() => undefined)));
+    await Promise.all(written.map(item => deleteStoredMediaObject(item).catch(() => undefined)));
     return { status: "error", message: "The images could not be saved. No partial upload was kept." };
   }
 

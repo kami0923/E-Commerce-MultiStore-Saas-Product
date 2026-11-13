@@ -27,6 +27,7 @@
     "db:migrate": "prisma migrate dev"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1168.0",
     "@better-auth/prisma-adapter": "^1.7.14",
     "@prisma/adapter-better-sqlite3": "^7.10.1",
     "@prisma/adapter-pg": "^7.10.1",
