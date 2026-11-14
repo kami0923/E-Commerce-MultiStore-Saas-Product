@@ -17,7 +17,7 @@ test("Cloudflare R2 is preferred when its configuration is complete", () => {
 });
 
 test("an explicitly selected R2 provider fails closed when a secret is missing", () => {
-  const { R2_SECRET_ACCESS_KEY: _secret, ...incompleteR2 } = completeR2;
+  const incompleteR2 = { ...completeR2, R2_SECRET_ACCESS_KEY: undefined };
   const result = resolveMediaStorageConfiguration({
     NODE_ENV: "production",
     MEDIA_STORAGE_PROVIDER: "r2",
