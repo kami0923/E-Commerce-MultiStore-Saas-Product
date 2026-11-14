@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { del as deleteBlob, head } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireTenantPermission } from "@/data/auth";
+import { requirePlatformAdmin, requireTenantPermission } from "@/data/auth";
 import { db } from "@/lib/db";
 import {
   deleteStoredMediaObject,
@@ -115,4 +115,70 @@ export async function registerBlobMediaBatchAction(input: unknown): Promise<Medi
   revalidatePath("/dashboard/media");
   revalidatePath("/dashboard/catalog");
   return { status: "success", message: `${verified.length} image${verified.length === 1 ? "" : "s"} added to the media library.` };
+}
+
+export async function migrateLegacyMediaAction(_state: MediaActionState): Promise<MediaActionState> {
+  void _state;
+  const actor = await requirePlatformAdmin();
+  const storage = resolveMediaStorageConfiguration();
+  if (!storage.ready || storage.provider === "local") {
+    return { status: "error", message: "Permanent cloud media storage must be active before migration." };
+  }
+
+  const legacyAssets = await db.mediaAsset.findMany({
+    where: { url: { startsWith: "/uploads/" } },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, tenantId: true, storeId: true, filename: true, mimeType: true, url: true },
+  });
+  if (legacyAssets.length === 0) return { status: "success", message: "All media is already stored in permanent cloud storage." };
+
+  const baseUrl = resolvePublicApplicationUrl();
+  if (!baseUrl) return { status: "error", message: "The public application URL is not configured for migration." };
+
+  let migrated = 0;
+  let failed = 0;
+  for (const asset of legacyAssets) {
+    let stored: StoredMediaObject | null = null;
+    try {
+      const sourceUrl = new URL(asset.url, baseUrl);
+      const response = await fetch(sourceUrl, { cache: "no-store" });
+      if (!response.ok) throw new Error("Legacy image could not be read.");
+      const contentType = response.headers.get("content-type")?.split(";")[0]?.trim() || asset.mimeType;
+      const bytes = Buffer.from(await response.arrayBuffer());
+      if (!allowedTypes.has(contentType) || bytes.length === 0 || bytes.length > MEDIA_MAX_FILE_BYTES) {
+        throw new Error("Legacy image type or size is invalid.");
+      }
+
+      stored = await storeMediaObject({ tenantId: asset.tenantId, storeId: asset.storeId, filename: asset.filename, contentType, bytes });
+      await db.$transaction([
+        db.mediaAsset.update({ where: { id: asset.id }, data: { url: stored.url, mimeType: contentType, sizeBytes: bytes.length } }),
+        db.auditLog.create({ data: { tenantId: asset.tenantId, storeId: asset.storeId, actorId: actor.id, action: "media.migrated", entityType: "MediaAsset", entityId: asset.id, summary: `Migrated ${asset.filename} to ${storage.provider}` } }),
+      ]);
+      migrated += 1;
+    } catch (error) {
+      console.error("Legacy media migration failed", { assetId: asset.id, error });
+      if (stored) await deleteStoredMediaObject(stored).catch(() => undefined);
+      failed += 1;
+    }
+  }
+
+  revalidatePath("/dashboard/media");
+  revalidatePath("/dashboard/catalog");
+  revalidatePath("/store/[storeSlug]", "page");
+
+  if (failed > 0) {
+    return { status: "error", message: `${migrated} legacy image${migrated === 1 ? "" : "s"} migrated; ${failed} could not be migrated and remain unchanged.` };
+  }
+  return { status: "success", message: `${migrated} legacy image${migrated === 1 ? "" : "s"} moved to permanent cloud storage.` };
+}
+
+function resolvePublicApplicationUrl() {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim() || process.env.BETTER_AUTH_URL?.trim();
+  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  const candidate = configured || (vercelUrl ? `https://${vercelUrl}` : "");
+  try {
+    return candidate ? new URL(candidate) : null;
+  } catch {
+    return null;
+  }
 }

@@ -1,8 +1,17 @@
-# Phase 1: permanent media storage with Cloudflare R2
+# Phase 1: permanent media storage
 
-Meridian Commerce uses Cloudflare R2 as its preferred production media store.
-Vercel Blob remains supported as a fallback, and local disk is used only while
-developing on a computer.
+Meridian Commerce supports Cloudflare R2 and Vercel Blob as permanent production
+media stores. The current production deployment uses Vercel Blob. Local disk is
+used only while developing on a computer.
+
+## Current production status
+
+- Vercel Blob is connected and reported ready by `/api/health`.
+- Browser-direct uploads support 20 images, 12 MB per image, and 120 MB per batch.
+- Tenant and store authorization is checked before every upload token is issued.
+- Blob metadata is verified again before an image is registered in the database.
+- The super-admin media page includes a one-time migration for older `/uploads/`
+  assets. Product/gallery relationships remain unchanged during migration.
 
 ## What is already integrated
 
@@ -17,7 +26,7 @@ developing on a computer.
 - `/api/health` reports whether media storage is ready and which provider is in
   use, without exposing credentials.
 
-## Cloudflare setup
+## Optional Cloudflare R2 setup
 
 1. Sign in to Cloudflare and open **Storage & databases > R2 > Overview**.
 2. Enable R2 for the account if Cloudflare requests it.
@@ -56,11 +65,15 @@ After saving the variables, redeploy the latest production deployment.
 ## Verification checklist
 
 1. Open `https://YOUR-VERCEL-DOMAIN/api/health` and confirm:
-   `integrations.mediaStorage.ready` is `true` and `provider` is
-   `cloudflare-r2`.
+   `integrations.mediaStorage.ready` is `true` and `provider` is either
+   `vercel-blob` or `cloudflare-r2`.
 2. Sign in as a merchant and upload one new test image from **Media library**.
 3. Confirm the image appears in Cloudflare R2 under a `tenants/` folder.
 4. Attach it to a draft product and confirm it loads on the public storefront.
 5. Test the storefront in a private browser window and on a phone.
-6. Keep the existing images untouched until their R2 copies and storefront
+6. Keep the existing images untouched until their cloud copies and storefront
    URLs have been verified.
+
+For Vercel Blob, use **Dashboard > Media library > Migrate legacy images** as a
+super administrator. The old files are intentionally retained as rollback
+copies after their database URLs have been migrated.
