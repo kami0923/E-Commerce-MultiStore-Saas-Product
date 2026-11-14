@@ -33,7 +33,9 @@ Public account creation is disabled. The platform owner creates merchant busines
 5. Create and connect a Vercel Blob store so Vercel supplies `BLOB_READ_WRITE_TOKEN`.
 6. Deploy. The `postinstall` script generates the Prisma client during the build.
 
-The product images already stored under `public/uploads` are included in the deployment. New production uploads are saved to Vercel Blob. Upload submissions are limited to 4 MB total to remain within the server request limit.
+Production media is stored in Vercel Blob and registered against the correct tenant and store. Browser-direct uploads support up to 20 images per batch, 12 MB per image and 120 MB total; each tenant's plan storage allowance is also enforced on the server. See `docs/phase-1-cloudflare-r2.md` for the storage and migration workflow.
+
+Subscription plans are market-specific (PKR for Pakistan and USD internationally) and enforce stores, team seats, products and media storage. Super admins manage pricing, renewals and access from **Plans & usage**. See `docs/phase-2-subscriptions.md`.
 
 See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for the complete launch checklist.
 

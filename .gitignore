@@ -13,4 +13,4 @@ out
 /prisma/work/*.db
 /prisma/work/*.db-journal
 /backups
-
+.vercel

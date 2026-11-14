@@ -1,6 +1,7 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { z } from "zod";
 import { requireTenantPermission } from "@/data/auth";
+import { canStoreMedia } from "@/data/subscription-limits";
 import { MEDIA_ALLOWED_TYPES, MEDIA_MAX_FILE_BYTES } from "@/lib/media-limits";
 
 export const runtime = "nodejs";
@@ -19,6 +20,8 @@ export async function POST(request: Request) {
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const payload = payloadSchema.parse(JSON.parse(clientPayload || "{}"));
         await requireTenantPermission(payload.tenantId, "products.manage", payload.storeId);
+        const capacity = await canStoreMedia(payload.tenantId, 1);
+        if (!capacity.allowed) throw new Error(capacity.message);
 
         const expectedPrefix = `tenants/${payload.tenantId}/stores/${payload.storeId}/`;
         if (!pathname.startsWith(expectedPrefix) || pathname.slice(expectedPrefix.length).includes("/")) {

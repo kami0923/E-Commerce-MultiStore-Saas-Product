@@ -5,6 +5,7 @@ import { del as deleteBlob, head } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePlatformAdmin, requireTenantPermission } from "@/data/auth";
+import { canStoreMedia } from "@/data/subscription-limits";
 import { db } from "@/lib/db";
 import {
   deleteStoredMediaObject,
@@ -39,6 +40,8 @@ export async function uploadMediaAction(_state: MediaActionState, formData: Form
   const scope = await requireTenantPermission(tenantId, "products.manage", storeId);
   const store = await db.store.findFirst({ where: { id: storeId, tenantId }, select: { id: true, name: true } });
   if (!store) return { status: "error", message: "The selected store is unavailable." };
+  const capacity = await canStoreMedia(tenantId, files.reduce((total, file) => total + file.size, 0));
+  if (!capacity.allowed) return { status: "error", message: capacity.message };
   const storage = resolveMediaStorageConfiguration();
   if (!storage.ready) return { status: "error", message: storage.message };
   const written: StoredMediaObject[] = [];
@@ -99,6 +102,12 @@ export async function registerBlobMediaBatchAction(input: unknown): Promise<Medi
       const filename = metadata.pathname.slice(prefix.length);
       if (!filename) throw new Error("Blob filename is missing.");
       verified.push({ url: metadata.url, pathname: metadata.pathname, filename, originalName: asset.originalName, mimeType: metadata.contentType, sizeBytes: metadata.size });
+    }
+
+    const capacity = await canStoreMedia(tenantId, verified.reduce((total, asset) => total + asset.sizeBytes, 0));
+    if (!capacity.allowed) {
+      await Promise.all(verified.map(asset => deleteBlob(asset.url).catch(() => undefined)));
+      return { status: "error", message: capacity.message };
     }
 
     await db.$transaction(async tx => {

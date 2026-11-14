@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireTenantPermission } from "@/data/auth";
+import { canCreateProduct } from "@/data/subscription-limits";
 import { db } from "@/lib/db";
 
 export type CommerceModuleState = {
@@ -96,6 +97,8 @@ export async function createProductAction(_state: CommerceModuleState, formData:
   const value = parsed.data;
   const scope = await requireTenantPermission(value.tenantId, "products.manage", value.storeId);
   await verifiedStore(value.tenantId, value.storeId);
+  const capacity = await canCreateProduct(value.tenantId);
+  if (!capacity.allowed) return { status: "error", message: capacity.message };
   if (value.categoryId) {
     const category = await db.category.findFirst({ where: { id: value.categoryId, tenantId: value.tenantId, storeId: value.storeId }, select: { id: true } });
     if (!category) return { status: "error", message: "The selected category is outside this store." };

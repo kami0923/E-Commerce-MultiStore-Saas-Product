@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requirePlatformAdmin, requireTenantPermission } from "@/data/auth";
+import { requireTenantPermission } from "@/data/auth";
 import { db } from "@/lib/db";
 
 const storeIdentity = z.object({ tenantId: z.string().min(1), storeId: z.string().min(1) });
@@ -38,14 +38,5 @@ export async function connectPaymentProviderAction(formData: FormData) {
   const status = isOffline ? "CONNECTED" : parsed.accountReference ? "PENDING" : "NOT_CONNECTED";
   const connection = await db.paymentConnection.upsert({ where: { storeId_provider: { storeId: parsed.storeId, provider: parsed.provider } }, create: { id: randomUUID(), tenantId: parsed.tenantId, storeId: parsed.storeId, provider: parsed.provider, displayName: parsed.displayName, accountReference: parsed.accountReference, testMode: parsed.testMode === "true", status, enabled: isOffline }, update: { displayName: parsed.displayName, accountReference: parsed.accountReference, testMode: parsed.testMode === "true", status, enabled: isOffline } });
   await db.auditLog.create({ data: { tenantId: parsed.tenantId, storeId: parsed.storeId, actorId: scope.user.id, action: "payment.connection_updated", entityType: "PaymentConnection", entityId: connection.id, summary: `${parsed.displayName} payment setup ${status.toLowerCase().replaceAll("_", " ")}` } });
-  revalidatePath("/dashboard/commerce-setup");
-}
-
-export async function assignSubscriptionAction(formData: FormData) {
-  const actor = await requirePlatformAdmin();
-  const parsed = z.object({ tenantId: z.string().min(1), planId: z.string().min(1) }).parse({ tenantId: formData.get("tenantId"), planId: formData.get("planId") });
-  const end = new Date(); end.setDate(end.getDate() + 30);
-  const subscription = await db.tenantSubscription.upsert({ where: { tenantId: parsed.tenantId }, create: { id: randomUUID(), tenantId: parsed.tenantId, planId: parsed.planId, status: "ACTIVE", currentPeriodEnd: end }, update: { planId: parsed.planId, status: "ACTIVE", currentPeriodStart: new Date(), currentPeriodEnd: end } });
-  await db.auditLog.create({ data: { tenantId: parsed.tenantId, actorId: actor.id, action: "subscription.plan_assigned", entityType: "TenantSubscription", entityId: subscription.id, summary: "Assigned monthly subscription plan" } });
   revalidatePath("/dashboard/commerce-setup");
 }

@@ -647,19 +647,21 @@ model PaymentConnection {
 }
 
 model SubscriptionPlan {
-  id            String               @id @default(cuid())
-  code          String               @unique
-  name          String
-  market        String
-  currency      String
-  monthlyMinor  Int
-  storeLimit    Int
-  staffLimit    Int
-  features      Json
-  active        Boolean              @default(true)
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
-  subscriptions TenantSubscription[]
+  id             String               @id @default(cuid())
+  code           String               @unique
+  name           String
+  market         String
+  currency       String
+  monthlyMinor   Int
+  storeLimit     Int
+  staffLimit     Int
+  productLimit   Int                  @default(100)
+  mediaStorageMb Int                  @default(250)
+  features       Json
+  active         Boolean              @default(true)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  subscriptions  TenantSubscription[]
 }
 
 model TenantSubscription {

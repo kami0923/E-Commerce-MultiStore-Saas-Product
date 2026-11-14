@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardList, CreditCard, ExternalLink, Headphones, Images, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Users, Warehouse, X } from "lucide-react";
+import { BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Users, Warehouse, X } from "lucide-react";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ const navigation = [
   { label: "Inventory", href: "/dashboard/inventory", icon: Warehouse, permission: "inventory.view" },
   { label: "Orders", href: "/dashboard/orders", icon: ClipboardList, permission: "orders.view" },
   { label: "Payments & delivery", href: "/dashboard/commerce-setup", icon: CreditCard, permission: "stores.manage" },
+  { label: "Plans & usage", href: "/dashboard/subscription", icon: Gauge, permission: "stores.view" },
   { label: "Customer care", href: "/dashboard/customer-care", icon: Headphones, permission: "orders.manage" },
   { label: "WhatsApp Business", href: "/dashboard/whatsapp", icon: MessageCircle, permission: "stores.manage" },
   { label: "Team & roles", href: "/dashboard/team", icon: Users, permission: "staff.view" },
