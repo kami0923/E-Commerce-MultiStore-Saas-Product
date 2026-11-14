@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
 import { requireTenantPermission } from "@/data/auth";
 import { canCreateProduct } from "@/data/subscription-limits";
 import { db } from "@/lib/db";
@@ -393,6 +394,7 @@ export async function transitionOrderAction(formData: FormData) {
     });
   });
 
+  scheduleNotificationDispatch();
   revalidatePath("/dashboard/orders");
   revalidatePath("/dashboard/inventory");
   revalidatePath("/dashboard");

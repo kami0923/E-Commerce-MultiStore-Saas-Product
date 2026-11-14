@@ -8,6 +8,7 @@ import { requirePlatformAdmin, requireTenantPermission } from "@/data/auth";
 import { canCreateStore } from "@/data/subscription-limits";
 import { generateInvitationToken } from "@/lib/invitations";
 import { getRequestOrigin } from "@/lib/request-origin";
+import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
 
 export type CommerceActionState = {
   status: "idle" | "error" | "success";
@@ -80,6 +81,8 @@ export async function createBusinessAction(_state: CommerceActionState, formData
   });
   if (!initialPlan) return { status: "error", message: `No active subscription supports ${verticals.length} stores in this market.` };
   const { token, tokenHash } = generateInvitationToken();
+  const appUrl = await getRequestOrigin();
+  const invitationUrl = `${appUrl}/invite/${token}`;
   const tenantSlug = slugify(name);
   const existingStoreCount = await db.store.count();
 
@@ -114,9 +117,10 @@ export async function createBusinessAction(_state: CommerceActionState, formData
       trialEnd.setDate(trialEnd.getDate() + 14);
       await tx.tenantSubscription.create({ data: { tenantId: tenant.id, planId: initialPlan.id, status: "TRIALING", currentPeriodEnd: trialEnd } });
 
-      await tx.invitation.create({
+      const invitation = await tx.invitation.create({
         data: { tenantId: tenant.id, invitedById: actor.id, email: ownerEmail, role: "OWNER", tokenHash, expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) },
       });
+      await tx.notificationOutbox.create({ data: { tenantId: tenant.id, storeId: stores[0].id, channel: "EMAIL", recipient: ownerEmail, template: "owner_invitation", payload: { invitationUrl, role: "OWNER", expiresAt: invitation.expiresAt.toISOString(), inviterName: actor.name } } });
       await tx.auditLog.create({
         data: { tenantId: tenant.id, actorId: actor.id, action: "tenant.created", entityType: "Tenant", entityId: tenant.id, summary: `Created ${name} with ${stores.length} store${stores.length === 1 ? "" : "s"}` },
       });
@@ -125,11 +129,11 @@ export async function createBusinessAction(_state: CommerceActionState, formData
     return { status: "error", message: "The business could not be created. Please try again." };
   }
 
+  scheduleNotificationDispatch();
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/businesses");
   revalidatePath("/dashboard/stores");
-  const appUrl = await getRequestOrigin();
-  return { status: "success", message: `${name} was created successfully.`, invitationUrl: `${appUrl}/invite/${token}` };
+  return { status: "success", message: `${name} was created and its owner invitation was queued by email.`, invitationUrl };
 }
 
 export async function createStoreAction(_state: CommerceActionState, formData: FormData): Promise<CommerceActionState> {

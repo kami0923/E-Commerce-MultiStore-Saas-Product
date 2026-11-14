@@ -10,8 +10,11 @@ function authorized(request: Request) {
   return timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
 }
 
-export async function POST(request: Request) {
+async function handle(request: Request) {
   if (!authorized(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   const result = await dispatchPendingNotifications();
   return Response.json(result, { headers: { "Cache-Control": "no-store" } });
 }
+
+export const GET = handle;
+export const POST = handle;

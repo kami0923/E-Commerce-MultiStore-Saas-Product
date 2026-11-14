@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
 
 type TrackedOrder = { id: string; orderNumber: string; status: string; currency: string; subtotalMinor: number; discountMinor: number; shippingMinor: number; taxMinor: number; totalMinor: number; placedAt: string; storeName: string; items: { productName: string; variantName: string; quantity: number; totalMinor: number }[]; returnRequest?: { status: string; reason: string } | null };
 export type TrackOrderState = { status: "idle" | "error" | "success"; message?: string; order?: TrackedOrder };
@@ -22,5 +23,6 @@ export async function requestReturnAction(_state: TrackOrderState, formData: For
   const order = await db.order.findFirst({ where: { orderNumber: parsed.data.orderNumber, customerEmail: parsed.data.email, store: { slug: parsed.data.storeSlug, status: "ACTIVE" } }, select: { id: true, tenantId: true, storeId: true, orderNumber: true } });
   if (!order) return { status: "error", message: "The order could not be verified." };
   await db.$transaction(async tx => { const request = await tx.returnRequest.upsert({ where: { orderId_customerEmail: { orderId: order.id, customerEmail: parsed.data.email } }, create: { tenantId: order.tenantId, storeId: order.storeId, orderId: order.id, customerEmail: parsed.data.email, reason: parsed.data.reason, note: parsed.data.note }, update: { reason: parsed.data.reason, note: parsed.data.note, status: "REQUESTED" } }); await tx.notificationOutbox.create({ data: { tenantId: order.tenantId, storeId: order.storeId, orderId: order.id, channel: "EMAIL", recipient: parsed.data.email, template: "return_requested", payload: { orderNumber: order.orderNumber, returnRequestId: request.id } } }); await tx.auditLog.create({ data: { tenantId: order.tenantId, storeId: order.storeId, action: "return.customer_requested", entityType: "ReturnRequest", entityId: request.id, summary: `Customer requested a return for ${order.orderNumber}` } }); });
+  scheduleNotificationDispatch();
   return trackOrderAction({ status: "idle" }, formData);
 }

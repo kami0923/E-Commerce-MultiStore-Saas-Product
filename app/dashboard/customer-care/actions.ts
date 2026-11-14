@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireTenantPermission } from "@/data/auth";
 import { db } from "@/lib/db";
+import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
 
 const identity = z.object({ tenantId: z.string().min(1), storeId: z.string().min(1) });
 
@@ -32,5 +33,19 @@ export async function updateReturnStatusAction(formData: FormData) {
   const request = await db.returnRequest.findFirst({ where: { id: parsed.returnId, tenantId: parsed.tenantId, storeId: parsed.storeId }, include: { order: { select: { id: true, orderNumber: true } } } });
   if (!request) throw new Error("Return request not found.");
   await db.$transaction(async tx => { await tx.returnRequest.update({ where: { id: request.id }, data: { status: parsed.status } }); if (parsed.status === "REFUNDED") await tx.order.update({ where: { id: request.order.id }, data: { status: "REFUNDED" } }); await tx.notificationOutbox.create({ data: { tenantId: parsed.tenantId, storeId: parsed.storeId, orderId: request.order.id, channel: "EMAIL", recipient: request.customerEmail, template: "return_status", payload: { orderNumber: request.order.orderNumber, returnStatus: parsed.status } } }); await tx.auditLog.create({ data: { tenantId: parsed.tenantId, storeId: parsed.storeId, actorId: scope.user.id, action: "return.status_updated", entityType: "ReturnRequest", entityId: request.id, summary: `${request.order.orderNumber} return marked ${parsed.status.toLowerCase()}` } }); });
+  scheduleNotificationDispatch();
   revalidatePath("/dashboard/customer-care"); revalidatePath("/dashboard/orders");
+}
+
+export async function retryNotificationAction(formData: FormData) {
+  const parsed = identity.extend({ notificationId: z.string().min(1) }).parse({ tenantId: formData.get("tenantId"), storeId: formData.get("storeId"), notificationId: formData.get("notificationId") });
+  const scope = await requireTenantPermission(parsed.tenantId, "orders.manage", parsed.storeId);
+  const notification = await db.notificationOutbox.findFirst({ where: { id: parsed.notificationId, tenantId: parsed.tenantId, storeId: parsed.storeId }, select: { id: true, recipient: true, template: true } });
+  if (!notification) throw new Error("Notification not found.");
+  await db.$transaction([
+    db.notificationOutbox.update({ where: { id: notification.id }, data: { status: "PENDING", attempts: 0, nextAttemptAt: new Date(), lockedAt: null, lastError: null } }),
+    db.auditLog.create({ data: { tenantId: parsed.tenantId, storeId: parsed.storeId, actorId: scope.user.id, action: "notification.retry_requested", entityType: "NotificationOutbox", entityId: notification.id, summary: `Retried ${notification.template} for ${notification.recipient}` } }),
+  ]);
+  scheduleNotificationDispatch(1);
+  revalidatePath("/dashboard/customer-care");
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { orderTotal, promotionDiscount, taxAmount } from "@/lib/pricing";
+import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
 
 export type CheckoutState = { status: "idle" | "error" | "success"; message?: string; orderNumber?: string; paymentMethod?: string; errors?: Record<string, string[]> };
 
@@ -81,10 +82,12 @@ export async function placePublicOrderAction(_state: CheckoutState, formData: Fo
         if (changed.count !== 1) throw new Error(`Stock for ${variant.product.name} changed during checkout. Please retry.`);
       }
       if (promotion) await tx.promotion.update({ where: { id: promotion.id }, data: { usedCount: { increment: 1 } } });
-      await tx.notificationOutbox.createMany({ data: [{ tenantId: store.tenantId, storeId: store.id, orderId: order.id, channel: "EMAIL", recipient: value.customerEmail, template: "order_confirmation", payload: { orderNumber: number, totalMinor, currency: store.currency } }, { tenantId: store.tenantId, storeId: store.id, orderId: order.id, channel: "WHATSAPP", recipient: value.customerPhone, template: "order_confirmation", payload: { orderNumber: number, totalMinor, currency: store.currency } }] });
+      const merchantRecipients = await tx.membership.findMany({ where: { tenantId: store.tenantId, active: true, role: { in: ["OWNER", "ADMIN"] } }, select: { user: { select: { email: true } } } });
+      await tx.notificationOutbox.createMany({ data: [{ tenantId: store.tenantId, storeId: store.id, orderId: order.id, channel: "EMAIL", recipient: value.customerEmail, template: "order_confirmation", payload: { orderNumber: number, totalMinor, currency: store.currency, paymentMethod: selectedPayment.displayName } }, { tenantId: store.tenantId, storeId: store.id, orderId: order.id, channel: "WHATSAPP", recipient: value.customerPhone, template: "order_confirmation", payload: { orderNumber: number, totalMinor, currency: store.currency } }, ...[...new Set(merchantRecipients.map(item => item.user.email))].map(recipient => ({ tenantId: store.tenantId, storeId: store.id, orderId: order.id, channel: "EMAIL" as const, recipient, template: "merchant_new_order", payload: { orderNumber: number, totalMinor, currency: store.currency, customerName: value.customerName, customerEmail: value.customerEmail } }))] });
       await tx.auditLog.create({ data: { tenantId: store.tenantId, storeId: store.id, action: "order.web_created", entityType: "Order", entityId: order.id, summary: `Public checkout created ${number}`, changes: { status: "PENDING", subtotalMinor, discountMinor, shippingMinor, taxMinor, totalMinor, promotionCode: promotion?.code, paymentMethod: value.paymentMethod } } });
       return number;
     });
+    scheduleNotificationDispatch();
     revalidatePath("/dashboard"); revalidatePath("/dashboard/orders"); revalidatePath("/dashboard/inventory"); revalidatePath("/dashboard/analytics");
     return { status: "success", orderNumber, paymentMethod: selectedPayment.displayName, message: "Your order has been placed successfully." };
   } catch (error) { return { status: "error", message: error instanceof Error ? error.message : "Checkout could not be completed." }; }

@@ -7,6 +7,7 @@ import { canInviteTeamMember } from "@/data/subscription-limits";
 import { db } from "@/lib/db";
 import { generateInvitationToken } from "@/lib/invitations";
 import { getRequestOrigin } from "@/lib/request-origin";
+import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
 
 export type TeamActionState = { status: "idle" | "success" | "error"; message?: string; invitationUrl?: string; errors?: Record<string, string[]> };
 const role = z.enum(["ADMIN", "MANAGER", "CATALOG_MANAGER", "INVENTORY_MANAGER", "ORDER_MANAGER", "MARKETING_MANAGER", "ANALYST", "SUPPORT", "VIEWER"]);
@@ -23,14 +24,17 @@ export async function inviteTeamMemberAction(_state: TeamActionState, formData: 
   const existing = await db.user.findUnique({ where: { email: value.email }, select: { memberships: { where: { tenantId: value.tenantId }, select: { id: true } } } });
   if (existing?.memberships.length) return { status: "error", message: "This email is already a member of the business." };
   const { token, tokenHash } = generateInvitationToken();
+  const appUrl = await getRequestOrigin();
+  const invitationUrl = `${appUrl}/invite/${token}`;
   await db.$transaction(async tx => {
     await tx.invitation.updateMany({ where: { tenantId: value.tenantId, email: value.email, status: "PENDING" }, data: { status: "REVOKED" } });
     const invitation = await tx.invitation.create({ data: { tenantId: value.tenantId, invitedById: scope.user.id, email: value.email, role: value.role, storeIds: [...new Set(value.storeIds)], tokenHash, expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) } });
+    await tx.notificationOutbox.create({ data: { tenantId: value.tenantId, storeId: value.storeIds[0], channel: "EMAIL", recipient: value.email, template: "team_invitation", payload: { invitationUrl, role: value.role, expiresAt: invitation.expiresAt.toISOString(), inviterName: scope.user.name } } });
     await tx.auditLog.create({ data: { tenantId: value.tenantId, actorId: scope.user.id, action: "staff.invited", entityType: "Invitation", entityId: invitation.id, summary: `Invited ${value.email} as ${value.role.toLowerCase().replaceAll("_", " ")}`, changes: { storeIds: value.storeIds } } });
   });
+  scheduleNotificationDispatch();
   revalidatePath("/dashboard/team");
-  const appUrl = await getRequestOrigin();
-  return { status: "success", message: "Secure invitation created. Share this link with the invited person.", invitationUrl: `${appUrl}/invite/${token}` };
+  return { status: "success", message: "Secure invitation queued by email. The link remains available as a fallback.", invitationUrl };
 }
 
 export async function updateMemberAccessAction(formData: FormData) {
