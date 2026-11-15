@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Banknote, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Truck, Users, Warehouse, X } from "lucide-react";
+import { Activity, Banknote, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LockKeyhole, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Truck, Users, Warehouse, X } from "lucide-react";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ const navigation = [
   { label: "Team & roles", href: "/dashboard/team", icon: Users, permission: "staff.view" },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3, permission: "analytics.view" },
   { label: "Audit logs", href: "/dashboard/audit", icon: ShieldCheck, permission: "audit.view" },
+  { label: "Account security", href: "/dashboard/security", icon: LockKeyhole },
 ] satisfies { label: string; href: string; icon: typeof LayoutDashboard; permission?: Permission; platformOnly?: boolean }[];
 
 type Workspace = { name: string; subtitle: string; initials: string; scopeLabel: string; platformAccess: boolean; storefront: { id: string; name: string; slug: string; status: string } | null };

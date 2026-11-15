@@ -41,6 +41,8 @@ Analytics now includes date-range reporting, estimated gross profit and tenant-s
 
 Payments now use a tenant-safe transaction ledger for pending checkout intentions, confirmed collections, split payments and bounded refunds. See `docs/phase-5-payments.md`.
 
+Account security includes strong password rules, database session controls, revocation, rate limiting and security history. Email verification and reset delivery are prepared but intentionally remain optional until Resend is connected. See `docs/phase-2-account-security.md`.
+
 See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for the complete launch checklist.
 
 ## WhatsApp Business linking

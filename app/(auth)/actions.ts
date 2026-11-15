@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { passwordSchema } from "@/lib/password-policy";
 
 export type AuthActionState = {
   status: "idle" | "error";
@@ -12,12 +13,14 @@ export type AuthActionState = {
   errors?: Record<string, string[]>;
 };
 
-const credentialsSchema = z.object({
+const signInCredentialsSchema = z.object({
   email: z.email("Enter a valid email address.").trim().toLowerCase(),
-  password: z.string().min(12, "Password must contain at least 12 characters.").max(128),
+  password: z.string().min(1, "Enter your password.").max(128),
 });
 
-const setupSchema = credentialsSchema.extend({
+const setupSchema = z.object({
+  email: z.email("Enter a valid email address.").trim().toLowerCase(),
+  password: passwordSchema,
   name: z.string().trim().min(2, "Enter your full name.").max(80),
 });
 
@@ -63,7 +66,7 @@ export async function setupPlatformAction(_state: AuthActionState, formData: For
 }
 
 export async function signInAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
-  const validated = credentialsSchema.safeParse({
+  const validated = signInCredentialsSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });

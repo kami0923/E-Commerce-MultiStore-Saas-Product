@@ -168,6 +168,7 @@ model User {
   invitations   Invitation[]  @relation("InvitationSender")
   stockMovements StockMovement[] @relation("StockMovementActor")
   paymentTransactions PaymentTransaction[] @relation("PaymentTransactionActor")
+  securityEvents SecurityEvent[]
 
   @@map("user")
 }
@@ -219,6 +220,30 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rateLimit")
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  summary   String
+  ipAddress String?
+  userAgent String?
+  details   Json?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
 }
 
 model Tenant {

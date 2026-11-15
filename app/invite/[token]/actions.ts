@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { acceptInvitationForUser, getInvitationByToken } from "@/lib/invitations";
+import { passwordSchema } from "@/lib/password-policy";
 import { getCurrentUser } from "@/data/auth";
 
 export type InviteActionState = { status: "idle" | "error"; message?: string; errors?: Record<string, string[]> };
@@ -12,7 +13,7 @@ export type InviteActionState = { status: "idle" | "error"; message?: string; er
 const inviteSignupSchema = z.object({
   token: z.string().min(32),
   name: z.string().trim().min(2, "Enter your full name.").max(80),
-  password: z.string().min(12, "Use at least 12 characters.").max(128),
+  password: passwordSchema,
 });
 
 export async function createInvitedAccountAction(_state: InviteActionState, formData: FormData): Promise<InviteActionState> {
