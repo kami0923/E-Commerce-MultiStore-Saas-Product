@@ -320,6 +320,11 @@ export async function createOrderAction(_state: CommerceModuleState, formData: F
           customerName: value.customerName, shippingData: { address: value.shippingAddress },
         },
       });
+      await tx.paymentTransaction.create({ data: {
+        tenantId: value.tenantId, storeId: value.storeId, orderId: order.id, actorId: scope.user.id,
+        provider: "CASH_ON_DELIVERY", type: "PAYMENT", status: "PENDING", amountMinor: totalMinor,
+        currency: store.currency, note: "Manual order awaiting payment",
+      } });
       for (const variant of variants) {
         const quantity = requested.get(variant.id) ?? 0;
         await tx.orderItem.create({

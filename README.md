@@ -39,6 +39,8 @@ Subscription plans are market-specific (PKR for Pakistan and USD internationally
 
 Analytics now includes date-range reporting, estimated gross profit and tenant-scoped CSV downloads for orders, customers, catalog and inventory. See `docs/phase-3-reporting.md`.
 
+Payments now use a tenant-safe transaction ledger for pending checkout intentions, confirmed collections, split payments and bounded refunds. See `docs/phase-5-payments.md`.
+
 See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for the complete launch checklist.
 
 ## WhatsApp Business linking

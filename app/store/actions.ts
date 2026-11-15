@@ -74,6 +74,11 @@ export async function placePublicOrderAction(_state: CheckoutState, formData: Fo
         customerId: customer.id, promotionCode: promotion?.code, subtotalMinor, discountMinor, shippingMinor, taxMinor, totalMinor, customerEmail: value.customerEmail, customerName: value.customerName,
         shippingData: { address: value.address, city: value.city, country: value.country, phone: value.customerPhone, notes: value.notes, paymentMethod: value.paymentMethod, paymentLabel: selectedPayment.displayName, shippingProfileId: matchingShipping?.id, shippingLabel: matchingShipping?.name },
       } });
+      await tx.paymentTransaction.create({ data: {
+        tenantId: store.tenantId, storeId: store.id, orderId: order.id, provider: value.paymentMethod,
+        type: "PAYMENT", status: "PENDING", amountMinor: totalMinor, currency: store.currency,
+        note: `${selectedPayment.displayName} selected at checkout`,
+      } });
       for (const variant of variants) {
         const quantity = requested.get(variant.id) ?? 0;
         await tx.orderItem.create({ data: { tenantId: store.tenantId, orderId: order.id, variantId: variant.id, productName: variant.product.name, variantName: variant.title, sku: variant.sku, quantity, unitPriceMinor: variant.priceMinor, totalMinor: variant.priceMinor * quantity } });

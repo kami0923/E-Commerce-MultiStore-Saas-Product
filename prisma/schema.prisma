@@ -80,6 +80,18 @@ enum PaymentProvider {
   STRIPE
 }
 
+enum PaymentTransactionType {
+  PAYMENT
+  REFUND
+}
+
+enum PaymentTransactionStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
 enum ConnectionStatus {
   NOT_CONNECTED
   PENDING
@@ -155,6 +167,7 @@ model User {
   auditEvents   AuditLog[]    @relation("AuditActor")
   invitations   Invitation[]  @relation("InvitationSender")
   stockMovements StockMovement[] @relation("StockMovementActor")
+  paymentTransactions PaymentTransaction[] @relation("PaymentTransactionActor")
 
   @@map("user")
 }
@@ -239,6 +252,7 @@ model Tenant {
   suppliers           Supplier[]
   purchaseOrders      PurchaseOrder[]
   stockMovements      StockMovement[]
+  paymentTransactions PaymentTransaction[]
 
   @@index([status])
 }
@@ -311,6 +325,7 @@ model Store {
   suppliers          Supplier[]
   purchaseOrders     PurchaseOrder[]
   stockMovements     StockMovement[]
+  paymentTransactions PaymentTransaction[]
 
   @@unique([tenantId, slug])
   @@index([tenantId, status])
@@ -565,6 +580,7 @@ model Order {
   customer       Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
   returnRequests ReturnRequest[]
   notifications  NotificationOutbox[]
+  paymentTransactions PaymentTransaction[]
 
   @@unique([tenantId, storeId, orderNumber])
   @@index([tenantId, storeId, placedAt])
@@ -756,6 +772,32 @@ model PaymentConnection {
 
   @@unique([storeId, provider])
   @@index([tenantId, storeId, enabled])
+}
+
+model PaymentTransaction {
+  id                String                   @id @default(cuid())
+  tenantId          String
+  storeId           String
+  orderId           String
+  actorId           String?
+  provider          PaymentProvider
+  type              PaymentTransactionType   @default(PAYMENT)
+  status            PaymentTransactionStatus @default(PENDING)
+  amountMinor       Int
+  currency          String
+  providerReference String?
+  note              String?
+  processedAt       DateTime?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  tenant            Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  store             Store                    @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  order             Order                    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  actor             User?                    @relation("PaymentTransactionActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, storeId, createdAt])
+  @@index([orderId, status, type])
+  @@index([providerReference])
 }
 
 model SubscriptionPlan {
