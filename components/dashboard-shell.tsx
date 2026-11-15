@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Users, Warehouse, X } from "lucide-react";
+import { Activity, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Truck, Users, Warehouse, X } from "lucide-react";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ const navigation = [
   { label: "Catalog", href: "/dashboard/catalog", icon: Boxes, permission: "products.view" },
   { label: "Media library", href: "/dashboard/media", icon: Images, permission: "products.view" },
   { label: "Inventory", href: "/dashboard/inventory", icon: Warehouse, permission: "inventory.view" },
+  { label: "Suppliers & purchasing", href: "/dashboard/procurement", icon: Truck, permission: "inventory.view" },
   { label: "Orders", href: "/dashboard/orders", icon: ClipboardList, permission: "orders.view" },
   { label: "Payments & delivery", href: "/dashboard/commerce-setup", icon: CreditCard, permission: "stores.manage" },
   { label: "Plans & usage", href: "/dashboard/subscription", icon: Gauge, permission: "stores.view" },

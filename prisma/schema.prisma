@@ -126,6 +126,19 @@ enum WhatsAppConnectionStatus {
   DISCONNECTED
 }
 
+enum PurchaseOrderStatus {
+  DRAFT
+  ORDERED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum StockMovementType {
+  ADJUSTMENT
+  PURCHASE_RECEIPT
+}
+
 model User {
   id            String        @id @default(cuid())
   email         String        @unique
@@ -141,6 +154,7 @@ model User {
   storeAccess   StoreAccess[]
   auditEvents   AuditLog[]    @relation("AuditActor")
   invitations   Invitation[]  @relation("InvitationSender")
+  stockMovements StockMovement[] @relation("StockMovementActor")
 
   @@map("user")
 }
@@ -222,6 +236,9 @@ model Tenant {
   returnRequests      ReturnRequest[]
   notifications       NotificationOutbox[]
   whatsappConnections WhatsAppConnection[]
+  suppliers           Supplier[]
+  purchaseOrders      PurchaseOrder[]
+  stockMovements      StockMovement[]
 
   @@index([status])
 }
@@ -291,6 +308,9 @@ model Store {
   returnRequests     ReturnRequest[]
   notifications      NotificationOutbox[]
   whatsappConnection WhatsAppConnection?
+  suppliers          Supplier[]
+  purchaseOrders     PurchaseOrder[]
+  stockMovements     StockMovement[]
 
   @@unique([tenantId, slug])
   @@index([tenantId, status])
@@ -414,6 +434,8 @@ model ProductVariant {
   product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
   inventory      InventoryItem[]
   orderItems     OrderItem[]
+  purchaseOrderLines PurchaseOrderLine[]
+  stockMovements StockMovement[]
 
   @@unique([tenantId, sku])
   @@index([tenantId, productId])
@@ -432,9 +454,90 @@ model InventoryItem {
   updatedAt    DateTime       @updatedAt
   store        Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
   variant      ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  stockMovements StockMovement[]
 
   @@unique([tenantId, storeId, variantId, locationKey])
   @@index([tenantId, storeId, onHand])
+}
+
+model Supplier {
+  id             String          @id @default(cuid())
+  tenantId       String
+  storeId        String
+  name           String
+  email          String?
+  phone          String?
+  notes          String?
+  active         Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  store          Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  purchaseOrders PurchaseOrder[]
+
+  @@unique([storeId, name])
+  @@index([tenantId, storeId, active])
+}
+
+model PurchaseOrder {
+  id          String              @id @default(cuid())
+  tenantId    String
+  storeId     String
+  supplierId  String
+  number      String
+  status      PurchaseOrderStatus @default(DRAFT)
+  currency    String
+  expectedAt  DateTime?
+  orderedAt   DateTime?
+  receivedAt  DateTime?
+  notes       String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  store       Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  supplier    Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  lines       PurchaseOrderLine[]
+
+  @@unique([storeId, number])
+  @@index([tenantId, storeId, status, createdAt])
+}
+
+model PurchaseOrderLine {
+  id               String        @id @default(cuid())
+  purchaseOrderId  String
+  variantId        String
+  orderedQuantity  Int
+  receivedQuantity Int           @default(0)
+  unitCostMinor    Int
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  variant          ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@unique([purchaseOrderId, variantId])
+  @@index([variantId])
+}
+
+model StockMovement {
+  id              String            @id @default(cuid())
+  tenantId        String
+  storeId         String
+  variantId       String
+  inventoryItemId String?
+  actorId         String?
+  type            StockMovementType
+  quantity        Int
+  referenceType   String?
+  referenceId     String?
+  note            String?
+  createdAt       DateTime          @default(now())
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  store           Store             @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  variant         ProductVariant    @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  inventoryItem   InventoryItem?    @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+  actor           User?             @relation("StockMovementActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, storeId, createdAt])
+  @@index([variantId, createdAt])
+  @@index([referenceType, referenceId])
 }
 
 model Order {

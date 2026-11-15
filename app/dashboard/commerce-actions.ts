@@ -231,7 +231,7 @@ export async function adjustInventoryAction(_state: CommerceModuleState, formDat
     const result = await db.$transaction(async (tx) => {
       const before = await tx.inventoryItem.findFirst({
         where: { id: value.inventoryId, tenantId: value.tenantId, storeId: value.storeId },
-        select: { id: true, onHand: true, reserved: true, variant: { select: { sku: true, product: { select: { name: true } } } } },
+        select: { id: true, variantId: true, onHand: true, reserved: true, variant: { select: { sku: true, product: { select: { name: true } } } } },
       });
       if (!before) throw new Error("Inventory item not found.");
       if (before.onHand + value.delta < before.reserved) throw new Error("Stock cannot be reduced below the quantity reserved by open orders.");
@@ -240,6 +240,13 @@ export async function adjustInventoryAction(_state: CommerceModuleState, formDat
       });
       if (changed.count !== 1) throw new Error("Stock changed during this adjustment. Please retry.");
       const after = before.onHand + value.delta;
+      await tx.stockMovement.create({
+        data: {
+          tenantId: value.tenantId, storeId: value.storeId, variantId: before.variantId,
+          inventoryItemId: before.id, actorId: scope.user.id, type: "ADJUSTMENT", quantity: value.delta,
+          referenceType: "InventoryItem", referenceId: before.id, note: value.reason,
+        },
+      });
       await tx.auditLog.create({
         data: {
           tenantId: value.tenantId, storeId: value.storeId, actorId: scope.user.id, action: "inventory.adjusted",
