@@ -54,3 +54,7 @@ npm run lint
 npm test
 npm run build
 ```
+
+## Platform operations
+
+Super administrators can open **Dashboard → Platform health** to review database responsiveness, integration readiness, subscription lifecycle, expired sessions and invitations, and failed notification delivery. The protected `/api/internal/maintenance` route is invoked by Vercel Cron every 15 minutes using `CRON_SECRET`; it performs safe lifecycle cleanup and processes the notification outbox. Email remains safely queued while Resend is intentionally unconfigured.

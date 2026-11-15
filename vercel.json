@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/internal/notifications/dispatch",
-      "schedule": "0 6 * * *"
+      "path": "/api/internal/maintenance",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

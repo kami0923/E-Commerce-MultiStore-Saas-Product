@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Users, Warehouse, X } from "lucide-react";
+import { Activity, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Users, Warehouse, X } from "lucide-react";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import type { Permission } from "@/lib/permissions";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Platform health", href: "/dashboard/platform-health", icon: Activity, platformOnly: true },
   { label: "Businesses", href: "/dashboard/businesses", icon: Building2, permission: "tenant.view" },
   { label: "Stores", href: "/dashboard/stores", icon: Store, permission: "stores.view" },
   { label: "Catalog", href: "/dashboard/catalog", icon: Boxes, permission: "products.view" },
@@ -24,7 +25,7 @@ const navigation = [
   { label: "Team & roles", href: "/dashboard/team", icon: Users, permission: "staff.view" },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3, permission: "analytics.view" },
   { label: "Audit logs", href: "/dashboard/audit", icon: ShieldCheck, permission: "audit.view" },
-] satisfies { label: string; href: string; icon: typeof LayoutDashboard; permission?: Permission }[];
+] satisfies { label: string; href: string; icon: typeof LayoutDashboard; permission?: Permission; platformOnly?: boolean }[];
 
 type Workspace = { name: string; subtitle: string; initials: string; scopeLabel: string; platformAccess: boolean; storefront: { id: string; name: string; slug: string; status: string } | null };
 
@@ -46,7 +47,7 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
         {!isPlatformAdmin && workspace.storefront && <Link href={(workspace.storefront.status === "ACTIVE" ? `/store/${workspace.storefront.slug}` : `/preview/${workspace.storefront.id}`) as never} target="_blank" className="mt-3 flex items-center justify-between rounded-xl bg-[#eaf2e6] px-3 py-2 text-xs font-black text-[#164b36]">{workspace.storefront.status === "ACTIVE" ? "View public website" : "Preview website"}<ExternalLink className="size-3.5" /></Link>}
       </div>
       <nav className="mt-5 flex-1 space-y-1 overflow-y-auto px-3">
-        {navigation.filter(({ permission }) => !permission || capabilities.includes(permission)).map(({ label, href, icon: Icon }) => {
+        {navigation.filter(({ permission, platformOnly }) => (!platformOnly || isPlatformAdmin) && (!permission || capabilities.includes(permission))).map(({ label, href, icon: Icon }) => {
           const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
           return (
             <Link key={href} href={href as never} onClick={() => setOpen(false)} className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition", active ? "bg-[#eaf2e6] text-[#164b36]" : "text-[#657169] hover:bg-[#f4f6f3] hover:text-[#10231a]") }>
