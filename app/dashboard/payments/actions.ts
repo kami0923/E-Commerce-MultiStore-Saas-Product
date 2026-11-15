@@ -28,7 +28,7 @@ export async function recordPaymentAction(formData: FormData) {
       ? await tx.paymentTransaction.update({ where: { id: pending.id }, data: { amountMinor, status: "SUCCEEDED", actorId: scope.user.id, providerReference: value.providerReference, note: value.note || "Payment confirmed", processedAt: new Date() } })
       : await tx.paymentTransaction.create({ data: { tenantId: value.tenantId, storeId: value.storeId, orderId: order.id, actorId: scope.user.id, provider: value.provider, type: "PAYMENT", status: "SUCCEEDED", amountMinor, currency: order.currency, providerReference: value.providerReference, note: value.note || "Payment confirmed", processedAt: new Date() } });
     await tx.auditLog.create({ data: { tenantId: value.tenantId, storeId: value.storeId, actorId: scope.user.id, action: "payment.recorded", entityType: "PaymentTransaction", entityId: transaction.id, summary: `Recorded ${value.provider.replaceAll("_", " ").toLowerCase()} payment for ${order.orderNumber}`, changes: { amountMinor, provider: value.provider, providerReference: value.providerReference } } });
-  });
+  }, { isolationLevel: "Serializable" });
   refreshPayments();
 }
 
@@ -45,6 +45,6 @@ export async function recordRefundAction(formData: FormData) {
     const after = refundable - amountMinor;
     if (after === 0) await tx.order.update({ where: { id: order.id }, data: { status: "REFUNDED" } });
     await tx.auditLog.create({ data: { tenantId: value.tenantId, storeId: value.storeId, actorId: scope.user.id, action: "payment.refunded", entityType: "PaymentTransaction", entityId: transaction.id, summary: `Recorded refund for ${order.orderNumber}`, changes: { amountMinor, provider: value.provider, providerReference: value.providerReference } } });
-  });
+  }, { isolationLevel: "Serializable" });
   refreshPayments();
 }

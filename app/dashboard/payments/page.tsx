@@ -14,13 +14,12 @@ export default async function PaymentsPage() {
   const canManage = permissions.includes("orders.manage");
   const canRefund = permissions.includes("orders.refund");
   const successful = transactions.filter(item => item.status === "SUCCEEDED");
-  const collected = successful.filter(item => item.type === "PAYMENT").reduce((sum, item) => sum + item.amountMinor, 0);
-  const refunded = successful.filter(item => item.type === "REFUND").reduce((sum, item) => sum + item.amountMinor, 0);
+  const collected = currencySummary(successful.filter(item => item.type === "PAYMENT"));
+  const refunded = currencySummary(successful.filter(item => item.type === "REFUND"));
   const pending = orders.filter(order => paymentState(order.totalMinor, order.paymentTransactions) === "PENDING" || paymentState(order.totalMinor, order.paymentTransactions) === "UNPAID").length;
-  const currency = orders[0]?.currency ?? "PKR";
 
   return <SectionPage eyebrow="Financial operations" title="Payments & settlements" description="Reconcile collections and refunds against each order. Only confirmed ledger entries affect paid and refundable balances." icon={CreditCard}>
-    <section className="grid gap-3 sm:grid-cols-3"><Metric icon={Banknote} label="Confirmed collections" value={formatMoney(collected, currency)} /><Metric icon={RotateCcw} label="Confirmed refunds" value={formatMoney(refunded, currency)} /><Metric icon={ReceiptText} label="Orders awaiting payment" value={String(pending)} /></section>
+    <section className="grid gap-3 sm:grid-cols-3"><Metric icon={Banknote} label="Confirmed collections" value={collected} /><Metric icon={RotateCcw} label="Confirmed refunds" value={refunded} /><Metric icon={ReceiptText} label="Orders awaiting payment" value={String(pending)} /></section>
 
     <section className="mt-5 space-y-3">{orders.map(order => {
       const balance = paymentBalance(order.paymentTransactions);
@@ -41,3 +40,4 @@ function Identity({ order }: { order: { id: string; tenantId: string; storeId: s
 function Metric({ icon: Icon, label, value }: { icon: typeof CreditCard; label: string; value: string }) { return <article className="rounded-2xl border border-[#e1e6e1] bg-white p-4"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl bg-[#edf3e9] text-[#164b36]"><Icon className="size-4" /></span><div><p className="text-xs text-[#7c8981]">{label}</p><p className="text-xl font-black">{value}</p></div></div></article>; }
 function Amount({ label, value }: { label: string; value: string }) { return <div><p className="text-[10px] uppercase tracking-wider text-[#87938b]">{label}</p><p className="mt-1 font-black">{value}</p></div>; }
 function PaymentStatus({ value }: { value: string }) { const tone = value === "PAID" ? "bg-[#edf5df] text-[#4e7841]" : value.includes("REFUND") ? "bg-[#fff0e9] text-[#a95139]" : value.includes("PARTIALLY") ? "bg-[#e8eff9] text-[#46678d]" : "bg-[#fff1db] text-[#9b6721]"; return <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${tone}`}>{value.replaceAll("_", " ")}</span>; }
+function currencySummary(items: { amountMinor: number; currency: string }[]) { const totals = new Map<string, number>(); for (const item of items) totals.set(item.currency, (totals.get(item.currency) ?? 0) + item.amountMinor); return totals.size ? [...totals].map(([currency, total]) => formatMoney(total, currency)).join(" · ") : "—"; }
