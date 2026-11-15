@@ -57,4 +57,4 @@ npm run build
 
 ## Platform operations
 
-Super administrators can open **Dashboard → Platform health** to review database responsiveness, integration readiness, subscription lifecycle, expired sessions and invitations, and failed notification delivery. The protected `/api/internal/maintenance` route is invoked by Vercel Cron every 15 minutes using `CRON_SECRET`; it performs safe lifecycle cleanup and processes the notification outbox. Email remains safely queued while Resend is intentionally unconfigured.
+Super administrators can open **Dashboard → Platform health** to review database responsiveness, integration readiness, subscription lifecycle, expired sessions and invitations, and failed notification delivery. The protected `/api/internal/maintenance` route is invoked by Vercel Cron once daily at 6:00 AM Pakistan time using `CRON_SECRET`; it performs safe lifecycle cleanup and processes the notification outbox. This schedule is compatible with the Vercel Hobby plan. Email remains safely queued while Resend is intentionally unconfigured.

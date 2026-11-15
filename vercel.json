@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/internal/maintenance",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 1 * * *"
     }
   ]
 }
