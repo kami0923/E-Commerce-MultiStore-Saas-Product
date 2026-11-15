@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { ArrowRight, LockKeyhole, Mail, UserRound } from "lucide-react";
 import type { AuthActionState } from "@/app/(auth)/actions";
+import { PasswordInput } from "@/components/password-input";
 
 const initialState: AuthActionState = { status: "idle" };
 
@@ -27,7 +28,7 @@ export function AuthForm({
       {storeSlug && <input type="hidden" name="storeSlug" value={storeSlug} />}
       {setup && <Field icon={UserRound} label="Full name" name="name" placeholder="Your name" error={state.errors?.name?.[0]} />}
       <Field icon={Mail} label="Email address" name="email" type="email" placeholder="you@company.com" error={state.errors?.email?.[0]} />
-      <Field icon={LockKeyhole} label="Password" name="password" type="password" placeholder="At least 12 characters" error={state.errors?.password?.[0]} />
+      <Field icon={LockKeyhole} label={setup ? "Create password" : "Password"} name="password" type="password" placeholder="At least 12 characters" error={state.errors?.password?.[0]} />
       {!setup && <div className="-mt-2 text-right"><Link href="/forgot-password" className="text-xs font-black text-[#164b36] hover:underline">Forgot password?</Link></div>}
       {state.message && <p role="alert" className="rounded-2xl border border-[#f2d5c9] bg-[#fff4ef] px-4 py-3 text-sm font-semibold text-[#a64f33]">{state.message}</p>}
       <button disabled={pending} className="group flex h-14 w-full items-center justify-between rounded-2xl bg-[#163d2d] px-5 text-sm font-black text-white shadow-[0_12px_28px_rgba(22,61,45,.2)] transition hover:-translate-y-0.5 hover:bg-[#102f23] disabled:cursor-wait disabled:opacity-60">
@@ -38,5 +39,7 @@ export function AuthForm({
 }
 
 function Field({ icon: Icon, label, error, ...props }: { icon: typeof Mail; label: string; error?: string; name: string; type?: string; placeholder: string }) {
-  return <label className="block"><span className="text-[11px] font-black uppercase tracking-[.08em] text-[#526158]">{label}</span><span className="relative mt-2.5 block"><Icon className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#829087]" /><input {...props} autoComplete={props.name === "email" ? "email" : props.name === "password" ? "current-password" : "name"} required className="h-14 w-full rounded-2xl border border-[#d9e0d9] bg-[#f9faf7] pl-11 pr-4 text-sm font-semibold outline-none transition placeholder:font-normal placeholder:text-[#9da69f] hover:border-[#bdc9bd] focus:border-[#6e9278] focus:bg-white focus:ring-4 focus:ring-[#c9f269]/20" /></span>{error && <span className="mt-1.5 block text-xs font-semibold text-[#b6573a]">{error}</span>}</label>;
+  const className = "h-14 w-full rounded-2xl border border-[#d9e0d9] bg-[#f9faf7] pl-11 pr-4 text-sm font-semibold outline-none transition placeholder:font-normal placeholder:text-[#9da69f] hover:border-[#bdc9bd] focus:border-[#6e9278] focus:bg-white focus:ring-4 focus:ring-[#c9f269]/20";
+  const autoComplete = props.name === "email" ? "email" : props.name === "password" ? (label.startsWith("Create") ? "new-password" : "current-password") : "name";
+  return <label className="block"><span className="text-[11px] font-black uppercase tracking-[.08em] text-[#526158]">{label}</span><span className="relative mt-2.5 block"><Icon className="pointer-events-none absolute left-4 top-1/2 z-10 size-4 -translate-y-1/2 text-[#829087]" />{props.type === "password" ? <PasswordInput {...props} autoComplete={autoComplete} required className={className} /> : <input {...props} autoComplete={autoComplete} required className={className} />}</span>{error && <span className="mt-1.5 block text-xs font-semibold text-[#b6573a]">{error}</span>}</label>;
 }

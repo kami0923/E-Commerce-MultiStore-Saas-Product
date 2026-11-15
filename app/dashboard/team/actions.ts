@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { requireTenantPermission } from "@/data/auth";
 import { canInviteTeamMember } from "@/data/subscription-limits";
@@ -8,8 +9,11 @@ import { db } from "@/lib/db";
 import { generateInvitationToken } from "@/lib/invitations";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
+import { auth } from "@/lib/auth";
+import { securityEmailConfigured } from "@/lib/security-email";
 
 export type TeamActionState = { status: "idle" | "success" | "error"; message?: string; invitationUrl?: string; errors?: Record<string, string[]> };
+export type MemberResetState = { status: "idle" | "success" | "error"; message?: string };
 const role = z.enum(["ADMIN", "MANAGER", "CATALOG_MANAGER", "INVENTORY_MANAGER", "ORDER_MANAGER", "MARKETING_MANAGER", "ANALYST", "SUPPORT", "VIEWER"]);
 
 export async function inviteTeamMemberAction(_state: TeamActionState, formData: FormData): Promise<TeamActionState> {
@@ -64,6 +68,24 @@ export async function setMemberActiveAction(formData: FormData) {
   const active = parsed.active === "true";
   await db.$transaction([db.membership.update({ where: { id: membership.id }, data: { active } }), db.auditLog.create({ data: { tenantId: parsed.tenantId, actorId: scope.user.id, action: active ? "staff.reactivated" : "staff.suspended", entityType: "Membership", entityId: membership.id, summary: `${active ? "Reactivated" : "Suspended"} ${membership.user.email}` } })]);
   revalidatePath("/dashboard/team");
+}
+
+export async function sendMemberPasswordResetAction(_state: MemberResetState, formData: FormData): Promise<MemberResetState> {
+  const parsed = z.object({ tenantId: z.string().min(1), userId: z.string().min(1) }).safeParse({ tenantId: formData.get("tenantId"), userId: formData.get("userId") });
+  if (!parsed.success) return { status: "error", message: "The merchant account could not be identified." };
+  const scope = await requireTenantPermission(parsed.data.tenantId, "staff.manage");
+  if (!securityEmailConfigured()) return { status: "error", message: "Add the Gmail SMTP settings in Vercel before sending reset emails." };
+  const membership = await db.membership.findUnique({ where: { tenantId_userId: { tenantId: parsed.data.tenantId, userId: parsed.data.userId } }, select: { id: true, user: { select: { id: true, email: true } } } });
+  if (!membership) return { status: "error", message: "Merchant membership not found." };
+  const base = (await getRequestOrigin()).replace(/\/$/, "");
+  try { await auth.api.requestPasswordReset({ headers: await headers(), body: { email: membership.user.email, redirectTo: `${base}/reset-password` } }); }
+  catch { return { status: "error", message: "The reset email could not be delivered. Check the email settings and try again." }; }
+  await db.$transaction([
+    db.auditLog.create({ data: { tenantId: parsed.data.tenantId, actorId: scope.user.id, action: "staff.password_reset_requested", entityType: "User", entityId: membership.user.id, summary: `Sent a password reset email to ${membership.user.email}` } }),
+    db.securityEvent.create({ data: { userId: membership.user.id, action: "password.reset_requested", summary: "A workspace administrator requested a password reset email", details: { tenantId: parsed.data.tenantId, requestedById: scope.user.id } } }),
+  ]);
+  revalidatePath("/dashboard/team");
+  return { status: "success", message: "Secure reset email sent. The link expires in one hour." };
 }
 
 export async function revokeInvitationAction(formData: FormData) {

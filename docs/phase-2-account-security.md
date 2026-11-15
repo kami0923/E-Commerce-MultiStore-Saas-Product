@@ -1,6 +1,6 @@
 # Phase 2: account security without production email delivery
 
-Resend remains intentionally postponed. The security foundation is implemented so email verification and password recovery delivery activate automatically after `RESEND_API_KEY` and `RESEND_FROM_EMAIL` are configured.
+Resend remains intentionally postponed. Password recovery and verification delivery can use temporary Gmail SMTP through `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM_EMAIL`. Resend remains the recommended production provider once a branded domain is available.
 
 ## Active now
 
