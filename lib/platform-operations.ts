@@ -3,6 +3,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { dispatchPendingNotifications } from "@/lib/notification-dispatcher";
 import { resolveMediaStorageConfiguration } from "@/lib/media-storage-config";
+import { securityEmailConfigured } from "@/lib/security-email";
 
 export async function getPlatformOperationsSnapshot() {
   const startedAt = Date.now();
@@ -54,7 +55,7 @@ export async function getPlatformOperationsSnapshot() {
     counts: { tenants, stores, activeStores, expiredSessions, expiredInvitations, overdueSubscriptions, pendingNotifications, failedNotifications },
     integrations: {
       media: { ready: media.ready, label: media.provider === "cloudflare-r2" ? "Cloudflare R2" : media.provider === "vercel-blob" ? "Vercel Blob" : "Local development" },
-      email: { ready: Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL), label: "Resend email" },
+      email: { ready: securityEmailConfigured(), label: process.env.SMTP_HOST ? "Gmail security email" : "Resend email" },
       whatsapp: { ready: Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET && process.env.META_WHATSAPP_CONFIG_ID && process.env.APP_ENCRYPTION_KEY), label: "WhatsApp linking" },
       cron: { ready: Boolean(process.env.CRON_SECRET), label: "Scheduled maintenance" },
     },
