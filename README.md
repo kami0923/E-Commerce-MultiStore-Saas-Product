@@ -37,6 +37,8 @@ Production media is stored in Vercel Blob and registered against the correct ten
 
 Subscription plans are market-specific (PKR for Pakistan and USD internationally) and enforce stores, team seats, products and media storage. Super admins manage pricing, renewals and access from **Plans & usage**. See `docs/phase-2-subscriptions.md`.
 
+Analytics now includes date-range reporting, estimated gross profit and tenant-scoped CSV downloads for orders, customers, catalog and inventory. See `docs/phase-3-reporting.md`.
+
 See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for the complete launch checklist.
 
 ## WhatsApp Business linking
