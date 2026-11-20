@@ -41,7 +41,9 @@ Analytics now includes date-range reporting, estimated gross profit and tenant-s
 
 Payments now use a tenant-safe transaction ledger for pending checkout intentions, confirmed collections, split payments and bounded refunds. See `docs/phase-5-payments.md`.
 
-Account security includes strong password rules, database session controls, revocation, rate limiting and security history. Email verification and reset delivery are prepared but intentionally remain optional until Resend is connected. See `docs/phase-2-account-security.md`.
+Account security includes strong password rules, database session controls, revocation, rate limiting, security history and SMTP-backed password-reset delivery. Resend can replace SMTP later without changing the user workflow. See `docs/phase-2-account-security.md`.
+
+Merchant onboarding now begins with a public application rather than creating live tenant data immediately. Super-admin approval provisions the isolated business, requested stores, trial plan, owner invitation and audit trail atomically. See `docs/phase-3-merchant-onboarding.md`.
 
 See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for the complete launch checklist.
 

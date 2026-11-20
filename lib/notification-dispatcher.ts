@@ -3,6 +3,7 @@ import "server-only";
 import { decryptSecret } from "@/lib/crypto-secrets";
 import { db } from "@/lib/db";
 import { buildEmail } from "@/lib/email-templates";
+import { emailTransportConfigured, sendPlatformEmail } from "@/lib/email-transport";
 
 type Payload = Record<string, unknown>;
 type DeliveryResult = { sent: boolean; configured: boolean; error?: string; providerMessageId?: string };
@@ -12,14 +13,10 @@ function asPayload(value: unknown): Payload { return value && typeof value === "
 function retryAt(attempt: number) { return new Date(Date.now() + Math.min(60, 2 ** Math.max(0, attempt - 1)) * 60_000); }
 
 async function sendEmail(id: string, recipient: string, template: string, payload: Payload, brand: { storeName: string; storeSlug: string; businessName: string; locale: string }): Promise<DeliveryResult> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (!apiKey || !from) return { sent: false, configured: false, error: "Email delivery is waiting for RESEND_API_KEY and RESEND_FROM_EMAIL." };
+  if (!emailTransportConfigured()) return { sent: false, configured: false, error: "Email delivery is waiting for a configured provider." };
   const content = buildEmail(template, payload, brand);
-  const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "Idempotency-Key": `meridian/${id}` }, body: JSON.stringify({ from, to: [recipient], subject: content.subject, html: content.html }) });
-  const result = await response.json().catch(() => ({})) as { id?: string; message?: string };
-  if (!response.ok) return { sent: false, configured: true, error: result.message || `Resend returned ${response.status}.` };
-  return { sent: true, configured: true, providerMessageId: result.id };
+  try { const result = await sendPlatformEmail({ recipient, subject: content.subject, html: content.html, idempotencyKey: `meridian/${id}` }); return { sent: true, configured: true, providerMessageId: result.providerMessageId }; }
+  catch (error) { return { sent: false, configured: true, error: error instanceof Error ? error.message : "Email delivery failed." }; }
 }
 
 function storeCredentials(connection: StoreWhatsAppConnection) {

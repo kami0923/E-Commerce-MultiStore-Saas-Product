@@ -43,9 +43,14 @@ export default async function HomePage() {
             <a href="#operations" className="transition hover:text-[#10231a]">Operations</a>
             <a href="#architecture" className="transition hover:text-[#10231a]">Architecture</a>
           </div>
-          <Link href="/sign-in" className="group inline-flex h-12 items-center gap-3 rounded-full bg-[#10231a] px-5 text-sm font-black text-white shadow-[0_12px_30px_rgba(16,35,26,.15)] transition hover:-translate-y-0.5 hover:bg-[#174632]">
-            Merchant login <span className="grid size-7 place-items-center rounded-full bg-white/10"><ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/apply" className="hidden h-12 items-center rounded-full border border-[#c5cec3] bg-white/70 px-5 text-sm font-black transition hover:-translate-y-0.5 hover:bg-white sm:inline-flex">
+              Apply as merchant
+            </Link>
+            <Link href="/sign-in" className="group inline-flex h-12 items-center gap-2 rounded-full bg-[#10231a] px-4 text-sm font-black text-white shadow-[0_12px_30px_rgba(16,35,26,.15)] transition hover:-translate-y-0.5 hover:bg-[#174632] sm:gap-3 sm:px-5">
+              <span className="sm:hidden">Login</span><span className="hidden sm:inline">Merchant login</span> <span className="grid size-7 place-items-center rounded-full bg-white/10"><ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span>
+            </Link>
+          </div>
         </nav>
 
         <section className="relative mx-auto grid max-w-[1480px] items-center gap-14 px-5 pb-20 pt-10 sm:px-8 lg:min-h-[760px] lg:grid-cols-[.88fr_1.12fr] lg:px-12 lg:pb-24 lg:pt-16">
@@ -66,6 +71,9 @@ export default async function HomePage() {
               <a href="#platform" className="inline-flex h-14 items-center gap-2 rounded-full border border-[#ccd4cc] bg-white/65 px-6 text-sm font-black transition hover:bg-white">
                 Explore capabilities <ChevronRight className="size-4" />
               </a>
+              <Link href="/apply" className="inline-flex h-14 items-center gap-2 rounded-full border border-[#315a45]/25 bg-[#315a45]/8 px-6 text-sm font-black text-[#234936] transition hover:-translate-y-0.5 hover:bg-[#315a45]/12 sm:hidden">
+                Apply as merchant <ArrowUpRight className="size-4" />
+              </Link>
             </div>
             <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 border-t border-[#d4dad2] pt-6 text-xs font-bold text-[#657269]">
               {["PostgreSQL foundation", "Tenant-isolated", "English + Urdu ready"].map(item => <span key={item} className="flex items-center gap-2"><span className="grid size-5 place-items-center rounded-full bg-[#dff3a9]"><Check className="size-3 text-[#315a45]" /></span>{item}</span>)}

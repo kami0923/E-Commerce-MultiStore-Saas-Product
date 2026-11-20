@@ -1,0 +1,25 @@
+"use server";
+
+import { headers } from "next/headers";
+import { z } from "zod";
+import { db } from "@/lib/db";
+import { applicationReference, createApplicationTrackingToken, sendApplicationEmail } from "@/lib/merchant-applications";
+import { getRequestOrigin } from "@/lib/request-origin";
+
+export type ApplicationState = { status: "idle" | "success" | "error"; message?: string; errors?: Record<string, string[]>; trackingUrl?: string; reference?: string };
+const vertical = z.enum(["CLOTHING", "SHOES", "JEWELLERY", "COSMETICS", "MULTI_CATEGORY"]);
+const applicationSchema = z.object({ businessName: z.string().trim().min(2, "Enter your business name.").max(100), ownerName: z.string().trim().min(2, "Enter the owner name.").max(80), ownerEmail: z.email("Enter a valid email address.").trim().toLowerCase(), phone: z.string().trim().max(30).optional(), companyWebsite: z.union([z.literal(""), z.url("Enter a complete website URL, including https://")]).refine(value => value === "" || /^https?:\/\//i.test(value), "Use an http:// or https:// website address.").optional(), description: z.string().trim().min(30, "Tell us at least 30 characters about the business.").max(1000), countryCode: z.enum(["PK", "INTL"]), baseCurrency: z.enum(["PKR", "USD"]), defaultLocale: z.enum(["en", "ur"]), verticals: z.array(vertical).min(1, "Select at least one store category.").max(5), consent: z.literal("on"), companyFax: z.string().max(0).optional() });
+
+export async function submitMerchantApplicationAction(_state: ApplicationState, formData: FormData): Promise<ApplicationState> {
+  const parsed = applicationSchema.safeParse({ businessName: formData.get("businessName"), ownerName: formData.get("ownerName"), ownerEmail: formData.get("ownerEmail"), phone: formData.get("phone") || undefined, companyWebsite: formData.get("companyWebsite") || "", description: formData.get("description"), countryCode: formData.get("countryCode"), baseCurrency: formData.get("baseCurrency"), defaultLocale: formData.get("defaultLocale"), verticals: formData.getAll("verticals"), consent: formData.get("consent"), companyFax: formData.get("companyFax") || undefined });
+  if (!parsed.success) return { status: "error", message: "Please review the highlighted application details.", errors: parsed.error.flatten().fieldErrors };
+  const allHeaders = await headers();
+  const ipAddress = allHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || allHeaders.get("x-real-ip") || null;
+  if (ipAddress) { const recent = await db.merchantApplication.count({ where: { ipAddress, createdAt: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }); if (recent >= 5) return { status: "error", message: "Too many applications were submitted from this connection today. Please try again tomorrow." }; }
+  const { token, hash } = createApplicationTrackingToken(); const appUrl = await getRequestOrigin(); const trackingUrl = `${appUrl}/apply/status/${token}`;
+  const existing = await db.merchantApplication.findFirst({ where: { ownerEmail: parsed.data.ownerEmail, status: { in: ["PENDING", "UNDER_REVIEW"] } }, orderBy: { createdAt: "desc" }, select: { id: true, businessName: true, ownerName: true, ownerEmail: true } });
+  if (existing) { await db.merchantApplication.update({ where: { id: existing.id }, data: { trackingTokenHash: hash } }); await sendApplicationEmail({ recipient: existing.ownerEmail, ownerName: existing.ownerName, businessName: existing.businessName, heading: "Your application is already in review", message: "Use the secure link below to view its current status.", actionLabel: "View application status", actionUrl: trackingUrl, idempotencyKey: `application/status/${existing.id}/${hash.slice(0, 12)}` }).catch(() => false); return { status: "success", message: "An open application already exists. We sent a refreshed private status link to the owner email.", trackingUrl, reference: applicationReference(existing.id) }; }
+  const application = await db.merchantApplication.create({ data: { businessName: parsed.data.businessName, ownerName: parsed.data.ownerName, ownerEmail: parsed.data.ownerEmail, phone: parsed.data.phone || null, companyWebsite: parsed.data.companyWebsite || null, description: parsed.data.description, countryCode: parsed.data.countryCode, baseCurrency: parsed.data.baseCurrency, defaultLocale: parsed.data.defaultLocale, verticals: parsed.data.verticals, trackingTokenHash: hash, ipAddress, userAgent: allHeaders.get("user-agent")?.slice(0, 500) || null } });
+  await sendApplicationEmail({ recipient: application.ownerEmail, ownerName: application.ownerName, businessName: application.businessName, heading: "We received your merchant application", message: "Meridian will review your business details. Keep this private link to follow the application status.", actionLabel: "Track application", actionUrl: trackingUrl, idempotencyKey: `application/received/${application.id}` }).catch(() => false);
+  return { status: "success", message: "Application submitted securely. A private tracking link has been emailed to you.", trackingUrl, reference: applicationReference(application.id) };
+}

@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Local Windows build folders can be held briefly by antivirus or a dev server.
+  // CI keeps the standard `.next` directory unless this explicit override is set.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   typedRoutes: true,
   // Windows can intermittently lock generated route folders when build workers

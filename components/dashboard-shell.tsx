@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Banknote, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LockKeyhole, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Truck, Users, Warehouse, X } from "lucide-react";
+import { Activity, Banknote, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardCheck, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LockKeyhole, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Truck, Users, Warehouse, X } from "lucide-react";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import type { Permission } from "@/lib/permissions";
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Platform health", href: "/dashboard/platform-health", icon: Activity, platformOnly: true },
+  { label: "Merchant applications", href: "/dashboard/onboarding", icon: ClipboardCheck, platformOnly: true },
   { label: "Businesses", href: "/dashboard/businesses", icon: Building2, permission: "tenant.view" },
   { label: "Stores", href: "/dashboard/stores", icon: Store, permission: "stores.view" },
   { label: "Catalog", href: "/dashboard/catalog", icon: Boxes, permission: "products.view" },

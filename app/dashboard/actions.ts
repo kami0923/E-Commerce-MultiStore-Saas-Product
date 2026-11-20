@@ -6,9 +6,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requirePlatformAdmin, requireTenantPermission } from "@/data/auth";
 import { canCreateStore } from "@/data/subscription-limits";
-import { generateInvitationToken } from "@/lib/invitations";
 import { getRequestOrigin } from "@/lib/request-origin";
-import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
+import { provisionBusiness } from "@/lib/business-provisioning";
 
 export type CommerceActionState = {
   status: "idle" | "error" | "success";
@@ -19,7 +18,6 @@ export type CommerceActionState = {
 
 const vertical = z.enum(["CLOTHING", "SHOES", "JEWELLERY", "COSMETICS", "MULTI_CATEGORY"]);
 const storefrontTheme = z.enum(["atelier", "market", "luxe"]);
-const storefrontThemeRotation = ["atelier", "market", "luxe"] as const;
 
 const businessSchema = z.object({
   name: z.string().trim().min(2, "Enter a business name.").max(100),
@@ -74,66 +72,14 @@ export async function createBusinessAction(_state: CommerceActionState, formData
   if (!parsed.success) return { status: "error", errors: parsed.error.flatten().fieldErrors };
 
   const { name, ownerEmail, countryCode, baseCurrency, defaultLocale, verticals } = parsed.data;
-  const initialPlan = await db.subscriptionPlan.findFirst({
-    where: { market: countryCode === "PK" ? "PK" : "INTL", active: true, storeLimit: { gte: verticals.length } },
-    orderBy: { monthlyMinor: "asc" },
-    select: { id: true, name: true },
-  });
-  if (!initialPlan) return { status: "error", message: `No active subscription supports ${verticals.length} stores in this market.` };
-  const { token, tokenHash } = generateInvitationToken();
   const appUrl = await getRequestOrigin();
-  const invitationUrl = `${appUrl}/invite/${token}`;
-  const tenantSlug = slugify(name);
-  const existingStoreCount = await db.store.count();
-
   try {
-    await db.$transaction(async (tx) => {
-      const tenant = await tx.tenant.create({
-        data: { name, slug: tenantSlug, status: "TRIAL", countryCode, baseCurrency, defaultLocale },
-      });
-
-      const stores = [];
-      for (const [index, storeVertical] of verticals.entries()) {
-        stores.push(await tx.store.create({
-          data: {
-            tenantId: tenant.id,
-            name: verticals.length === 1 ? name : `${name} ${storeVertical.toLowerCase().replace("_", " ")}`,
-            slug: slugify(`${name}-${storeVertical}`),
-            vertical: storeVertical,
-            currency: baseCurrency,
-            defaultLocale,
-            enabledLocales: ["en", "ur"],
-            status: "ACTIVE",
-            themeKey: storefrontThemeRotation[(existingStoreCount + index) % storefrontThemeRotation.length],
-          },
-        }));
-      }
-
-      for (const store of stores) {
-        await tx.shippingProfile.create({ data: { tenantId: tenant.id, storeId: store.id, name: countryCode === "PK" ? "Pakistan standard" : "International standard", countryCode: countryCode === "PK" ? "PK" : "INTL", rateMinor: countryCode === "PK" ? 25000 : 1000, freeAboveMinor: countryCode === "PK" ? 500000 : 10000, estimatedDays: countryCode === "PK" ? "2–5 business days" : "5–10 business days" } });
-        await tx.paymentConnection.create({ data: { tenantId: tenant.id, storeId: store.id, provider: "CASH_ON_DELIVERY", displayName: "Cash on delivery", status: "CONNECTED", enabled: true, testMode: false } });
-      }
-      const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + 14);
-      await tx.tenantSubscription.create({ data: { tenantId: tenant.id, planId: initialPlan.id, status: "TRIALING", currentPeriodEnd: trialEnd } });
-
-      const invitation = await tx.invitation.create({
-        data: { tenantId: tenant.id, invitedById: actor.id, email: ownerEmail, role: "OWNER", tokenHash, expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) },
-      });
-      await tx.notificationOutbox.create({ data: { tenantId: tenant.id, storeId: stores[0].id, channel: "EMAIL", recipient: ownerEmail, template: "owner_invitation", payload: { invitationUrl, role: "OWNER", expiresAt: invitation.expiresAt.toISOString(), inviterName: actor.name } } });
-      await tx.auditLog.create({
-        data: { tenantId: tenant.id, actorId: actor.id, action: "tenant.created", entityType: "Tenant", entityId: tenant.id, summary: `Created ${name} with ${stores.length} store${stores.length === 1 ? "" : "s"}` },
-      });
-    });
-  } catch {
-    return { status: "error", message: "The business could not be created. Please try again." };
+    const result = await provisionBusiness({ actor, appUrl, name, ownerEmail, countryCode, baseCurrency, defaultLocale, verticals });
+    revalidatePath("/dashboard"); revalidatePath("/dashboard/businesses"); revalidatePath("/dashboard/stores");
+    return { status: "success", message: `${name} was created and its owner invitation was queued by email.`, invitationUrl: result.invitationUrl };
+  } catch (error) {
+    return { status: "error", message: error instanceof Error ? error.message : "The business could not be created. Please try again." };
   }
-
-  scheduleNotificationDispatch();
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/businesses");
-  revalidatePath("/dashboard/stores");
-  return { status: "success", message: `${name} was created and its owner invitation was queued by email.`, invitationUrl };
 }
 
 export async function createStoreAction(_state: CommerceActionState, formData: FormData): Promise<CommerceActionState> {

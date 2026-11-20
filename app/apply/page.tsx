@@ -1,0 +1,12 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowLeft, Check, Clock3, ShieldCheck, Store } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
+import { MerchantApplicationForm } from "@/components/merchant-application-form";
+
+export const metadata: Metadata = { title: "Apply to sell on Meridian", description: "Submit a secure merchant application for review by Meridian Commerce." };
+
+export default function ApplyPage() {
+  const benefits = [{ icon: ShieldCheck, title: "Reviewed before activation", text: "No unverified business enters the live marketplace." }, { icon: Clock3, title: "Private status tracking", text: "A secure link lets you follow every decision." }, { icon: Check, title: "Owner-controlled access", text: "Approval creates an expiring invitation only for the owner email." }];
+  return <main className="min-h-screen bg-[#f2f4ee] text-[#10231a]"><nav className="mx-auto flex h-24 max-w-7xl items-center justify-between px-5 sm:px-8"><BrandMark /><Link href="/" className="inline-flex items-center gap-2 text-xs font-black text-[#526158]"><ArrowLeft className="size-4" />Marketplace</Link></nav><section className="mx-auto grid max-w-7xl gap-10 px-5 pb-20 pt-8 sm:px-8 lg:grid-cols-[.82fr_1.18fr] lg:gap-16 lg:pt-14"><div className="lg:sticky lg:top-10 lg:self-start"><span className="inline-flex items-center gap-2 rounded-full border border-[#d5ddd3] bg-white px-3.5 py-2 text-[10px] font-black uppercase tracking-[.15em] text-[#315a45]"><Store className="size-3.5" />Merchant onboarding</span><h1 className="mt-7 text-5xl font-black leading-[.92] tracking-[-.065em] sm:text-6xl">Build your brand.<br /><span className="font-serif font-normal italic text-[#47765d]">Keep control.</span></h1><p className="mt-7 max-w-xl text-base leading-8 text-[#657269]">Apply for a private Meridian workspace and a distinctive public storefront. Every application is reviewed before any tenant or store is created.</p><div className="mt-10 space-y-4">{benefits.map(({ icon: Icon, title, text }) => <div key={title} className="flex gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#e4eddf] text-[#315a45]"><Icon className="size-4" /></span><div><p className="text-sm font-black">{title}</p><p className="mt-1 text-xs leading-5 text-[#748078]">{text}</p></div></div>)}</div></div><MerchantApplicationForm /></section></main>;
+}

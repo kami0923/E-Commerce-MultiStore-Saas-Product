@@ -151,6 +151,13 @@ enum StockMovementType {
   PURCHASE_RECEIPT
 }
 
+enum MerchantApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
 model User {
   id            String        @id @default(cuid())
   email         String        @unique
@@ -169,6 +176,7 @@ model User {
   stockMovements StockMovement[] @relation("StockMovementActor")
   paymentTransactions PaymentTransaction[] @relation("PaymentTransactionActor")
   securityEvents SecurityEvent[]
+  reviewedMerchantApplications MerchantApplication[] @relation("MerchantApplicationReviewer")
 
   @@map("user")
 }
@@ -278,8 +286,40 @@ model Tenant {
   purchaseOrders      PurchaseOrder[]
   stockMovements      StockMovement[]
   paymentTransactions PaymentTransaction[]
+  merchantApplication MerchantApplication?
 
   @@index([status])
+}
+
+model MerchantApplication {
+  id               String                    @id @default(cuid())
+  businessName     String
+  ownerName        String
+  ownerEmail       String
+  phone            String?
+  companyWebsite   String?
+  description      String?
+  countryCode      String                    @default("PK")
+  baseCurrency     String                    @default("PKR")
+  defaultLocale    String                    @default("en")
+  verticals        Json
+  status           MerchantApplicationStatus @default(PENDING)
+  trackingTokenHash String                   @unique
+  ipAddress        String?
+  userAgent        String?
+  reviewNotes      String?
+  reviewedById     String?
+  approvedTenantId String?                   @unique
+  submittedAt      DateTime                  @default(now())
+  reviewedAt       DateTime?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  reviewedBy       User?                     @relation("MerchantApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  approvedTenant   Tenant?                   @relation(fields: [approvedTenantId], references: [id], onDelete: SetNull)
+
+  @@index([status, submittedAt])
+  @@index([ownerEmail, status])
+  @@index([ipAddress, createdAt])
 }
 
 model Invitation {
