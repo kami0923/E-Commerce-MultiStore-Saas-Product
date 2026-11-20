@@ -6,6 +6,7 @@ import { z } from "zod";
 import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
 import { requireTenantPermission } from "@/data/auth";
 import { canCreateProduct, getTenantSubscriptionAccess } from "@/data/subscription-limits";
+import { parseSpecificationLines, variantAttributes } from "@/lib/catalog-options";
 import { db } from "@/lib/db";
 
 export type CommerceModuleState = {
@@ -16,6 +17,16 @@ export type CommerceModuleState = {
 
 const id = z.string().min(1);
 const money = z.coerce.number().finite().min(0);
+const optionalText = (maximum: number) => z.string().trim().max(maximum).optional();
+
+function optionalMoney(value: FormDataEntryValue | null) {
+  return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function storefrontPaths() {
+  revalidatePath("/store/[slug]", "layout");
+  revalidatePath("/store/[slug]/product/[productSlug]", "page");
+}
 
 function slugify(value: string) {
   const base = value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 55) || "item";
@@ -74,11 +85,15 @@ const productSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   brand: z.string().trim().max(80).optional(),
   productType: z.string().trim().max(80).optional(),
-  categoryId: z.string().optional(),
+  categoryIds: z.array(id).max(5, "Select no more than 5 categories."),
+  specifications: z.string().trim().max(3000).optional(),
+  seoTitle: optionalText(70),
+  seoDescription: optionalText(160),
   variantTitle: z.string().trim().min(1, "Enter a variant title.").max(80),
   sku: z.string().trim().min(2, "Enter a SKU.").max(80).toUpperCase(),
-  price: money,
+  price: money, compareAt: money.optional(),
   cost: money.optional(),
+  color: optionalText(60), size: optionalText(60), material: optionalText(80),
   initialStock: z.coerce.number().int().min(0).max(1_000_000),
   reorderPoint: z.coerce.number().int().min(0).max(1_000_000),
   status: z.enum(["DRAFT", "ACTIVE"]),
@@ -89,20 +104,27 @@ export async function createProductAction(_state: CommerceModuleState, formData:
   const parsed = productSchema.safeParse({
     tenantId: formData.get("tenantId"), storeId: formData.get("storeId"), name: formData.get("name"),
     description: formData.get("description") || undefined, brand: formData.get("brand") || undefined,
-    productType: formData.get("productType") || undefined, categoryId: formData.get("categoryId") || undefined,
+    productType: formData.get("productType") || undefined, categoryIds: formData.getAll("categoryId"),
+    specifications: formData.get("specifications") || undefined, seoTitle: formData.get("seoTitle") || undefined,
+    seoDescription: formData.get("seoDescription") || undefined,
     variantTitle: formData.get("variantTitle"), sku: formData.get("sku"), price: formData.get("price"),
-    cost: formData.get("cost") || undefined, initialStock: formData.get("initialStock"),
+    compareAt: optionalMoney(formData.get("compareAt")), cost: optionalMoney(formData.get("cost")),
+    color: formData.get("color") || undefined, size: formData.get("size") || undefined, material: formData.get("material") || undefined,
+    initialStock: formData.get("initialStock"),
     reorderPoint: formData.get("reorderPoint"), status: formData.get("status"), mediaIds: formData.getAll("mediaId"),
   });
   if (!parsed.success) return { status: "error", errors: parsed.error.flatten().fieldErrors };
   const value = parsed.data;
+  if (value.compareAt !== undefined && value.compareAt <= value.price) return { status: "error", message: "The original price must be higher than the selling price." };
+  const specifications = parseSpecificationLines(value.specifications ?? "");
+  if (specifications.invalidLines.length) return { status: "error", message: `Use “Name: Value” for every specification. Check: ${specifications.invalidLines[0]}` };
   const scope = await requireTenantPermission(value.tenantId, "products.manage", value.storeId);
   await verifiedStore(value.tenantId, value.storeId);
   const capacity = await canCreateProduct(value.tenantId);
   if (!capacity.allowed) return { status: "error", message: capacity.message };
-  if (value.categoryId) {
-    const category = await db.category.findFirst({ where: { id: value.categoryId, tenantId: value.tenantId, storeId: value.storeId }, select: { id: true } });
-    if (!category) return { status: "error", message: "The selected category is outside this store." };
+  if (value.categoryIds.length > 0) {
+    const validCategories = await db.category.count({ where: { id: { in: value.categoryIds }, tenantId: value.tenantId, storeId: value.storeId } });
+    if (validCategories !== new Set(value.categoryIds).size) return { status: "error", message: "One or more selected categories are outside this store." };
   }
   if (value.mediaIds.length > 0) {
     const validMedia = await db.mediaAsset.count({ where: { id: { in: value.mediaIds }, tenantId: value.tenantId, storeId: value.storeId } });
@@ -115,19 +137,20 @@ export async function createProductAction(_state: CommerceModuleState, formData:
         data: {
           tenantId: value.tenantId, storeId: value.storeId, name: value.name, slug: slugify(value.name),
           description: value.description, brand: value.brand, productType: value.productType, status: value.status,
-          attributes: {},
+          attributes: specifications.attributes, seoTitle: value.seoTitle, seoDescription: value.seoDescription,
         },
       });
       const variant = await tx.productVariant.create({
         data: {
           tenantId: value.tenantId, productId: product.id, sku: value.sku, title: value.variantTitle,
-          priceMinor: Math.round(value.price * 100), costMinor: value.cost === undefined ? null : Math.round(value.cost * 100), attributes: {},
+          priceMinor: Math.round(value.price * 100), compareAtMinor: value.compareAt === undefined ? null : Math.round(value.compareAt * 100),
+          costMinor: value.cost === undefined ? null : Math.round(value.cost * 100), attributes: variantAttributes(value),
         },
       });
       await tx.inventoryItem.create({
         data: { tenantId: value.tenantId, storeId: value.storeId, variantId: variant.id, locationKey: "main", onHand: value.initialStock, reorderPoint: value.reorderPoint },
       });
-      if (value.categoryId) await tx.productCategory.create({ data: { tenantId: value.tenantId, productId: product.id, categoryId: value.categoryId } });
+      for (const categoryId of [...new Set(value.categoryIds)]) await tx.productCategory.create({ data: { tenantId: value.tenantId, productId: product.id, categoryId } });
       for (const [index, mediaAssetId] of [...new Set(value.mediaIds)].entries()) await tx.productMedia.create({ data: { productId: product.id, mediaAssetId, sortOrder: index, isPrimary: index === 0 } });
       await tx.auditLog.create({
         data: {
@@ -144,6 +167,7 @@ export async function createProductAction(_state: CommerceModuleState, formData:
   revalidatePath("/dashboard/catalog");
   revalidatePath("/dashboard/inventory");
   revalidatePath("/dashboard");
+  storefrontPaths();
   return { status: "success", message: `${value.name} was added without altering any existing products.` };
 }
 
@@ -151,7 +175,8 @@ const variantSchema = z.object({
   productId: id, tenantId: id, storeId: id,
   title: z.string().trim().min(1, "Enter a variant title.").max(80),
   sku: z.string().trim().min(2, "Enter a SKU.").max(80).toUpperCase(),
-  price: money, cost: money.optional(),
+  price: money, compareAt: money.optional(), cost: money.optional(),
+  color: optionalText(60), size: optionalText(60), material: optionalText(80),
   initialStock: z.coerce.number().int().min(0).max(1_000_000),
   reorderPoint: z.coerce.number().int().min(0).max(1_000_000),
 });
@@ -159,11 +184,13 @@ const variantSchema = z.object({
 export async function addVariantAction(_state: CommerceModuleState, formData: FormData): Promise<CommerceModuleState> {
   const parsed = variantSchema.safeParse({
     productId: formData.get("productId"), tenantId: formData.get("tenantId"), storeId: formData.get("storeId"),
-    title: formData.get("title"), sku: formData.get("sku"), price: formData.get("price"), cost: formData.get("cost") || undefined,
+    title: formData.get("title"), sku: formData.get("sku"), price: formData.get("price"), compareAt: optionalMoney(formData.get("compareAt")), cost: optionalMoney(formData.get("cost")),
+    color: formData.get("color") || undefined, size: formData.get("size") || undefined, material: formData.get("material") || undefined,
     initialStock: formData.get("initialStock"), reorderPoint: formData.get("reorderPoint"),
   });
   if (!parsed.success) return { status: "error", errors: parsed.error.flatten().fieldErrors };
   const value = parsed.data;
+  if (value.compareAt !== undefined && value.compareAt <= value.price) return { status: "error", message: "The original price must be higher than the selling price." };
   const scope = await requireTenantPermission(value.tenantId, "products.manage", value.storeId);
   const product = await db.product.findFirst({ where: { id: value.productId, tenantId: value.tenantId, storeId: value.storeId, status: { not: "ARCHIVED" } }, select: { id: true, name: true } });
   if (!product) return { status: "error", message: "The product is unavailable or archived." };
@@ -173,7 +200,8 @@ export async function addVariantAction(_state: CommerceModuleState, formData: Fo
       const variant = await tx.productVariant.create({
         data: {
           tenantId: value.tenantId, productId: product.id, title: value.title, sku: value.sku,
-          priceMinor: Math.round(value.price * 100), costMinor: value.cost === undefined ? null : Math.round(value.cost * 100), attributes: {},
+          priceMinor: Math.round(value.price * 100), compareAtMinor: value.compareAt === undefined ? null : Math.round(value.compareAt * 100),
+          costMinor: value.cost === undefined ? null : Math.round(value.cost * 100), attributes: variantAttributes(value),
         },
       });
       await tx.inventoryItem.create({
@@ -193,7 +221,83 @@ export async function addVariantAction(_state: CommerceModuleState, formData: Fo
 
   revalidatePath("/dashboard/catalog");
   revalidatePath("/dashboard/inventory");
+  storefrontPaths();
   return { status: "success", message: `${value.title} was added to ${product.name}.` };
+}
+
+const productUpdateSchema = z.object({
+  productId: id, tenantId: id, storeId: id,
+  name: z.string().trim().min(2).max(120), description: optionalText(2000), brand: optionalText(80), productType: optionalText(80),
+  status: z.enum(["DRAFT", "ACTIVE"]), categoryIds: z.array(id).max(5), mediaIds: z.array(id).max(8),
+  specifications: z.string().trim().max(3000).optional(), seoTitle: optionalText(70), seoDescription: optionalText(160),
+});
+
+export async function updateProductAction(_state: CommerceModuleState, formData: FormData): Promise<CommerceModuleState> {
+  const parsed = productUpdateSchema.safeParse({
+    productId: formData.get("productId"), tenantId: formData.get("tenantId"), storeId: formData.get("storeId"),
+    name: formData.get("name"), description: formData.get("description") || undefined, brand: formData.get("brand") || undefined,
+    productType: formData.get("productType") || undefined, status: formData.get("status"), categoryIds: formData.getAll("categoryId"),
+    mediaIds: formData.getAll("mediaId"), specifications: formData.get("specifications") || undefined,
+    seoTitle: formData.get("seoTitle") || undefined, seoDescription: formData.get("seoDescription") || undefined,
+  });
+  if (!parsed.success) return { status: "error", errors: parsed.error.flatten().fieldErrors };
+  const value = parsed.data;
+  const specifications = parseSpecificationLines(value.specifications ?? "");
+  if (specifications.invalidLines.length) return { status: "error", message: `Use “Name: Value” for every specification. Check: ${specifications.invalidLines[0]}` };
+  const scope = await requireTenantPermission(value.tenantId, "products.manage", value.storeId);
+  const product = await db.product.findFirst({ where: { id: value.productId, tenantId: value.tenantId, storeId: value.storeId, status: { not: "ARCHIVED" } }, select: { id: true, name: true } });
+  if (!product) return { status: "error", message: "The product is unavailable or archived." };
+  const uniqueCategories = [...new Set(value.categoryIds)];
+  const uniqueMedia = [...new Set(value.mediaIds)];
+  const [categoryCount, mediaCount] = await Promise.all([
+    db.category.count({ where: { id: { in: uniqueCategories }, tenantId: value.tenantId, storeId: value.storeId } }),
+    db.mediaAsset.count({ where: { id: { in: uniqueMedia }, tenantId: value.tenantId, storeId: value.storeId } }),
+  ]);
+  if (categoryCount !== uniqueCategories.length || mediaCount !== uniqueMedia.length) return { status: "error", message: "A selected category or image is outside this store." };
+
+  try {
+    await db.$transaction(async tx => {
+      await tx.product.update({ where: { id: product.id }, data: { name: value.name, description: value.description, brand: value.brand, productType: value.productType, status: value.status, attributes: specifications.attributes, seoTitle: value.seoTitle, seoDescription: value.seoDescription } });
+      await tx.productCategory.deleteMany({ where: { productId: product.id } });
+      for (const categoryId of uniqueCategories) await tx.productCategory.create({ data: { tenantId: value.tenantId, productId: product.id, categoryId } });
+      await tx.productMedia.deleteMany({ where: { productId: product.id } });
+      for (const [sortOrder, mediaAssetId] of uniqueMedia.entries()) await tx.productMedia.create({ data: { productId: product.id, mediaAssetId, sortOrder, isPrimary: sortOrder === 0 } });
+      await tx.auditLog.create({ data: { tenantId: value.tenantId, storeId: value.storeId, actorId: scope.user.id, action: "product.updated", entityType: "Product", entityId: product.id, summary: `Updated ${product.name}`, changes: { name: value.name, status: value.status, categories: uniqueCategories.length, media: uniqueMedia.length } } });
+    });
+  } catch { return { status: "error", message: "The product could not be updated. Please retry." }; }
+  revalidatePath("/dashboard/catalog");
+  storefrontPaths();
+  return { status: "success", message: `${value.name} and its storefront details were updated.` };
+}
+
+const variantUpdateSchema = variantSchema.omit({ initialStock: true, reorderPoint: true }).extend({ variantId: id, active: z.boolean() });
+
+export async function updateVariantAction(_state: CommerceModuleState, formData: FormData): Promise<CommerceModuleState> {
+  const parsed = variantUpdateSchema.safeParse({
+    variantId: formData.get("variantId"), productId: formData.get("productId"), tenantId: formData.get("tenantId"), storeId: formData.get("storeId"),
+    title: formData.get("title"), sku: formData.get("sku"), price: formData.get("price"), compareAt: optionalMoney(formData.get("compareAt")),
+    cost: optionalMoney(formData.get("cost")), color: formData.get("color") || undefined, size: formData.get("size") || undefined,
+    material: formData.get("material") || undefined, active: formData.get("active") === "on",
+  });
+  if (!parsed.success) return { status: "error", errors: parsed.error.flatten().fieldErrors };
+  const value = parsed.data;
+  if (value.compareAt !== undefined && value.compareAt <= value.price) return { status: "error", message: "The original price must be higher than the selling price." };
+  const scope = await requireTenantPermission(value.tenantId, "products.manage", value.storeId);
+  const variant = await db.productVariant.findFirst({ where: { id: value.variantId, productId: value.productId, tenantId: value.tenantId, product: { storeId: value.storeId, status: { not: "ARCHIVED" } } }, select: { id: true, title: true, active: true, product: { select: { name: true } } } });
+  if (!variant) return { status: "error", message: "The variant is unavailable or archived." };
+  if (variant.active && !value.active) {
+    const activeCount = await db.productVariant.count({ where: { productId: value.productId, active: true } });
+    if (activeCount <= 1) return { status: "error", message: "Keep at least one active variant. Make the product a draft if it should not be sold." };
+  }
+  try {
+    await db.$transaction([
+      db.productVariant.update({ where: { id: variant.id }, data: { title: value.title, sku: value.sku, priceMinor: Math.round(value.price * 100), compareAtMinor: value.compareAt === undefined ? null : Math.round(value.compareAt * 100), costMinor: value.cost === undefined ? null : Math.round(value.cost * 100), attributes: variantAttributes(value), active: value.active } }),
+      db.auditLog.create({ data: { tenantId: value.tenantId, storeId: value.storeId, actorId: scope.user.id, action: "product.variant_updated", entityType: "ProductVariant", entityId: variant.id, summary: `Updated ${variant.title} on ${variant.product.name}`, changes: { title: value.title, sku: value.sku, active: value.active, priceMinor: Math.round(value.price * 100) } } }),
+    ]);
+  } catch { return { status: "error", message: "The variant could not be updated. Check that the SKU is unique within the business." }; }
+  revalidatePath("/dashboard/catalog");
+  storefrontPaths();
+  return { status: "success", message: `${value.title} was updated.` };
 }
 
 export async function archiveProductAction(formData: FormData) {
@@ -210,6 +314,7 @@ export async function archiveProductAction(formData: FormData) {
     ]);
   }
   revalidatePath("/dashboard/catalog");
+  storefrontPaths();
 }
 
 const adjustmentSchema = z.object({

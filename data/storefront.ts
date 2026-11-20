@@ -36,7 +36,7 @@ const storefrontSelect = {
       variants: {
         where: { active: true },
         orderBy: { createdAt: "asc" as const },
-        select: { id: true, title: true, sku: true, priceMinor: true, compareAtMinor: true, inventory: { select: { onHand: true, reserved: true } } },
+        select: { id: true, title: true, sku: true, priceMinor: true, compareAtMinor: true, attributes: true, inventory: { select: { onHand: true, reserved: true } } },
       },
     },
   },
@@ -58,7 +58,7 @@ export async function getPublishedProduct(storeSlug: string, productSlug: string
   return db.product.findFirst({
     where: { slug: productSlug, status: "ACTIVE", store: { slug: storeSlug, status: "ACTIVE", tenant: { status: { in: ["TRIAL", "ACTIVE"] }, subscription: { is: { status: { in: ["TRIALING", "ACTIVE"] }, currentPeriodEnd: { gt: new Date() } } } } } },
     select: {
-      id: true, name: true, slug: true, description: true, brand: true, productType: true, seoTitle: true, seoDescription: true,
+      id: true, name: true, slug: true, description: true, brand: true, productType: true, attributes: true, seoTitle: true, seoDescription: true,
       categories: { select: { category: { select: { id: true, name: true, slug: true } } } },
       media: { orderBy: { sortOrder: "asc" }, select: { isPrimary: true, mediaAsset: { select: { id: true, url: true, altText: true } } } },
       variants: { where: { active: true }, orderBy: { createdAt: "asc" }, select: { id: true, title: true, sku: true, priceMinor: true, compareAtMinor: true, attributes: true, inventory: { select: { onHand: true, reserved: true } } } },

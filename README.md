@@ -39,6 +39,8 @@ Subscription plans are market-specific (PKR for Pakistan and USD internationally
 
 Subscription lifecycle is enforced across merchant writes, marketplace visibility, storefront pages and checkout. Expired businesses become read-only while existing fulfilment, refunds, reports and account security remain available. See `docs/phase-4-subscription-enforcement.md`.
 
+Advanced catalogue management supports multi-category products, structured specifications, SEO copy, ordered galleries, sale pricing, color/size/material variants and safe variant deactivation. See `docs/phase-5-advanced-catalogue.md`.
+
 Analytics now includes date-range reporting, estimated gross profit and tenant-scoped CSV downloads for orders, customers, catalog and inventory. See `docs/phase-3-reporting.md`.
 
 Payments now use a tenant-safe transaction ledger for pending checkout intentions, confirmed collections, split payments and bounded refunds. See `docs/phase-5-payments.md`.
