@@ -34,7 +34,7 @@ export async function placePublicOrderAction(_state: CheckoutState, formData: Fo
   });
   if (!parsed.success) return { status: "error", errors: parsed.error.flatten().fieldErrors, message: "Please check the highlighted checkout details." };
   const value = parsed.data;
-  const store = await db.store.findFirst({ where: { slug: value.storeSlug, status: "ACTIVE" }, select: { id: true, tenantId: true, currency: true, shippingProfiles: { where: { enabled: true } }, paymentConnections: { where: { enabled: true, status: "CONNECTED" }, select: { provider: true, displayName: true } }, promotions: { where: { active: true } }, taxRules: { where: { enabled: true } } } });
+  const store = await db.store.findFirst({ where: { slug: value.storeSlug, status: "ACTIVE", tenant: { status: { in: ["TRIAL", "ACTIVE"] }, subscription: { is: { status: { in: ["TRIALING", "ACTIVE"] }, currentPeriodEnd: { gt: new Date() } } } } }, select: { id: true, tenantId: true, currency: true, shippingProfiles: { where: { enabled: true } }, paymentConnections: { where: { enabled: true, status: "CONNECTED" }, select: { provider: true, displayName: true } }, promotions: { where: { active: true } }, taxRules: { where: { enabled: true } } } });
   if (!store) return { status: "error", message: "This store is not accepting orders right now." };
   const allowedPayments = store.paymentConnections.length ? store.paymentConnections : [{ provider: "CASH_ON_DELIVERY" as const, displayName: "Cash on delivery" }];
   const selectedPayment = allowedPayments.find(connection => connection.provider === value.paymentMethod);
@@ -45,6 +45,8 @@ export async function placePublicOrderAction(_state: CheckoutState, formData: Fo
 
   try {
     const orderNumber = await db.$transaction(async tx => {
+      const liveSubscription = await tx.tenantSubscription.count({ where: { tenantId: store.tenantId, status: { in: ["TRIALING", "ACTIVE"] }, currentPeriodEnd: { gt: new Date() } } });
+      if (liveSubscription !== 1) throw new Error("This store's subscription is no longer active, so checkout has been closed.");
       const variants = await tx.productVariant.findMany({
         where: { id: { in: [...requested.keys()] }, active: true, product: { tenantId: store.tenantId, storeId: store.id, status: "ACTIVE" } },
         select: { id: true, sku: true, title: true, priceMinor: true, product: { select: { name: true } }, inventory: { where: { storeId: store.id, locationKey: "main" }, select: { id: true, onHand: true, reserved: true } } },

@@ -65,17 +65,23 @@ export async function getPlatformOperationsSnapshot() {
 
 export async function runPlatformMaintenance() {
   const now = new Date();
-  const [sessions, invitations, subscriptions] = await db.$transaction([
-    db.session.deleteMany({ where: { expiresAt: { lt: now } } }),
-    db.invitation.updateMany({ where: { status: "PENDING", expiresAt: { lt: now } }, data: { status: "EXPIRED" } }),
-    db.tenantSubscription.updateMany({ where: { status: { in: ["ACTIVE", "TRIALING"] }, currentPeriodEnd: { lt: now } }, data: { status: "PAST_DUE" } }),
-  ]);
+  const { sessions, invitations, subscriptions } = await db.$transaction(async tx => {
+    const sessions = await tx.session.deleteMany({ where: { expiresAt: { lt: now } } });
+    const invitations = await tx.invitation.updateMany({ where: { status: "PENDING", expiresAt: { lt: now } }, data: { status: "EXPIRED" } });
+    const overdue = await tx.tenantSubscription.findMany({ where: { status: { in: ["ACTIVE", "TRIALING"] }, currentPeriodEnd: { lt: now } }, select: { id: true, tenantId: true, status: true } });
+    if (overdue.length > 0) {
+      await tx.tenantSubscription.updateMany({ where: { id: { in: overdue.map(item => item.id) } }, data: { status: "PAST_DUE" } });
+      await tx.tenant.updateMany({ where: { id: { in: overdue.map(item => item.tenantId) } }, data: { status: "SUSPENDED" } });
+      await tx.auditLog.createMany({ data: overdue.map(item => ({ tenantId: item.tenantId, action: "subscription.expired", entityType: "TenantSubscription", entityId: item.id, summary: `Subscription changed from ${item.status} to PAST_DUE after its period ended` })) });
+    }
+    return { sessions, invitations, subscriptions: overdue.length };
+  });
   const notifications = await dispatchPendingNotifications(50);
   return {
     completedAt: new Date().toISOString(),
     expiredSessionsRemoved: sessions.count,
     invitationsExpired: invitations.count,
-    subscriptionsMarkedPastDue: subscriptions.count,
+    subscriptionsMarkedPastDue: subscriptions,
     notifications,
   };
 }

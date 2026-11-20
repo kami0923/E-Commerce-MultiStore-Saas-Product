@@ -37,6 +37,8 @@ Production media is stored in Vercel Blob and registered against the correct ten
 
 Subscription plans are market-specific (PKR for Pakistan and USD internationally) and enforce stores, team seats, products and media storage. Super admins manage pricing, renewals and access from **Plans & usage**. See `docs/phase-2-subscriptions.md`.
 
+Subscription lifecycle is enforced across merchant writes, marketplace visibility, storefront pages and checkout. Expired businesses become read-only while existing fulfilment, refunds, reports and account security remain available. See `docs/phase-4-subscription-enforcement.md`.
+
 Analytics now includes date-range reporting, estimated gross profit and tenant-scoped CSV downloads for orders, customers, catalog and inventory. See `docs/phase-3-reporting.md`.
 
 Payments now use a tenant-safe transaction ledger for pending checkout intentions, confirmed collections, split payments and bounded refunds. See `docs/phase-5-payments.md`.
@@ -65,4 +67,4 @@ npm run build
 
 ## Platform operations
 
-Super administrators can open **Dashboard → Platform health** to review database responsiveness, integration readiness, subscription lifecycle, expired sessions and invitations, and failed notification delivery. The protected `/api/internal/maintenance` route is invoked by Vercel Cron once daily at 6:00 AM Pakistan time using `CRON_SECRET`; it performs safe lifecycle cleanup and processes the notification outbox. This schedule is compatible with the Vercel Hobby plan. Email remains safely queued while Resend is intentionally unconfigured.
+Super administrators can open **Dashboard → Platform health** to review database responsiveness, integration readiness, subscription lifecycle, expired sessions and invitations, and failed notification delivery. The protected `/api/internal/maintenance` route is invoked by Vercel Cron once daily at 6:00 AM Pakistan time using `CRON_SECRET`; it performs safe lifecycle cleanup and processes the notification outbox. This schedule is compatible with the Vercel Hobby plan. Email delivery uses the configured SMTP transport and can move to Resend later without changing application workflows.

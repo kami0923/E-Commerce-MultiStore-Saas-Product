@@ -7,6 +7,10 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { Permission } from "@/lib/permissions";
 import { permissions, permissionsForRole, roleCan } from "@/lib/permissions";
+import { getTenantSubscriptionAccess } from "@/data/subscription-limits";
+import { subscriptionAccessDecision } from "@/lib/subscription-policy";
+
+const subscriptionProtectedPermissions = new Set<Permission>(["stores.create", "stores.manage", "products.manage", "inventory.adjust", "staff.manage"]);
 
 export const getCurrentSession = cache(async () => {
   return auth.api.getSession({ headers: await headers() });
@@ -50,6 +54,11 @@ export async function requireTenantPermission(tenantId: string, permission: Perm
 
   if (!membership || !roleCan(membership.role, permission)) {
     throw new Error("Forbidden: you do not have permission for this business.");
+  }
+
+  if (subscriptionProtectedPermissions.has(permission)) {
+    const access = await getTenantSubscriptionAccess(tenantId);
+    if (!access.active) throw new Error(access.reason);
   }
 
   if (storeId) {
@@ -123,6 +132,7 @@ export async function getDashboardWorkspace() {
       scopeLabel: "Super admin",
       platformAccess: true as const,
       storefront: null,
+      subscription: null,
     };
   }
 
@@ -134,6 +144,7 @@ export async function getDashboardWorkspace() {
       tenant: {
         select: {
           name: true,
+          subscription: { select: { status: true, currentPeriodEnd: true, plan: { select: { name: true } } } },
           stores: { orderBy: { createdAt: "asc" }, take: 1, select: { id: true, name: true, slug: true, status: true } },
         },
       },
@@ -141,6 +152,7 @@ export async function getDashboardWorkspace() {
   });
   if (!membership) throw new Error("Your account is not assigned to a merchant workspace.");
   const name = membership.tenant.name;
+  const subscriptionAccess = subscriptionAccessDecision(membership.tenant.subscription);
   return {
     name,
     subtitle: "Merchant Console",
@@ -148,5 +160,6 @@ export async function getDashboardWorkspace() {
     scopeLabel: `${membership.role.toLowerCase().replace("_", " ")} workspace`,
     platformAccess: false as const,
     storefront: membership.tenant.stores[0] ?? null,
+    subscription: { ...subscriptionAccess, status: membership.tenant.subscription?.status ?? "UNASSIGNED", planName: membership.tenant.subscription?.plan.name ?? null, currentPeriodEnd: membership.tenant.subscription?.currentPeriodEnd ?? null },
   };
 }

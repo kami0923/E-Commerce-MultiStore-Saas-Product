@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
 import { requireTenantPermission } from "@/data/auth";
-import { canCreateProduct } from "@/data/subscription-limits";
+import { canCreateProduct, getTenantSubscriptionAccess } from "@/data/subscription-limits";
 import { db } from "@/lib/db";
 
 export type CommerceModuleState = {
@@ -286,6 +286,8 @@ export async function createOrderAction(_state: CommerceModuleState, formData: F
   const value = parsed.data;
   if (value.variantIds.length !== value.quantities.length) return { status: "error", message: "Every order item needs a quantity." };
   const scope = await requireTenantPermission(value.tenantId, "orders.manage", value.storeId);
+  const subscriptionAccess = await getTenantSubscriptionAccess(value.tenantId);
+  if (!subscriptionAccess.active) return { status: "error", message: subscriptionAccess.reason };
   const store = await verifiedStore(value.tenantId, value.storeId);
 
   const requested = new Map<string, number>();

@@ -43,7 +43,7 @@ const storefrontSelect = {
 };
 
 export async function getPublishedStorefront(slug: string) {
-  return db.store.findFirst({ where: { slug, status: "ACTIVE" }, select: storefrontSelect });
+  return db.store.findFirst({ where: { slug, status: "ACTIVE", tenant: { status: { in: ["TRIAL", "ACTIVE"] }, subscription: { is: { status: { in: ["TRIALING", "ACTIVE"] }, currentPeriodEnd: { gt: new Date() } } } } }, select: storefrontSelect });
 }
 
 export async function getStorefrontPreview(storeId: string) {
@@ -51,12 +51,12 @@ export async function getStorefrontPreview(storeId: string) {
 }
 
 export async function getStorefrontMetadata(slug: string) {
-  return db.store.findFirst({ where: { slug }, select: { name: true, vertical: true, tenant: { select: { name: true } } } });
+  return db.store.findFirst({ where: { slug, status: "ACTIVE", tenant: { status: { in: ["TRIAL", "ACTIVE"] }, subscription: { is: { status: { in: ["TRIALING", "ACTIVE"] }, currentPeriodEnd: { gt: new Date() } } } } }, select: { name: true, vertical: true, tenant: { select: { name: true } } } });
 }
 
 export async function getPublishedProduct(storeSlug: string, productSlug: string) {
   return db.product.findFirst({
-    where: { slug: productSlug, status: "ACTIVE", store: { slug: storeSlug, status: "ACTIVE" } },
+    where: { slug: productSlug, status: "ACTIVE", store: { slug: storeSlug, status: "ACTIVE", tenant: { status: { in: ["TRIAL", "ACTIVE"] }, subscription: { is: { status: { in: ["TRIALING", "ACTIVE"] }, currentPeriodEnd: { gt: new Date() } } } } } },
     select: {
       id: true, name: true, slug: true, description: true, brand: true, productType: true, seoTitle: true, seoDescription: true,
       categories: { select: { category: { select: { id: true, name: true, slug: true } } } },

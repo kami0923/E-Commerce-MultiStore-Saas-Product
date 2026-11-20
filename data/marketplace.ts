@@ -5,8 +5,9 @@ import { db } from "@/lib/db";
 
 export async function getMarketplaceStores() {
   await connection();
+  const now = new Date();
   return db.store.findMany({
-    where: { status: "ACTIVE" },
+    where: { status: "ACTIVE", tenant: { status: { in: ["TRIAL", "ACTIVE"] }, subscription: { is: { status: { in: ["TRIALING", "ACTIVE"] }, currentPeriodEnd: { gt: now } } } } },
     orderBy: [{ tenant: { name: "asc" } }, { name: "asc" }],
     select: {
       id: true,

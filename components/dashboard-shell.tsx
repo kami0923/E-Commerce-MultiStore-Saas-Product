@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Banknote, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardCheck, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LockKeyhole, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Truck, Users, Warehouse, X } from "lucide-react";
+import { Activity, AlertTriangle, Banknote, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardCheck, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LockKeyhole, LogOut, Menu, MessageCircle, Search, Settings2, ShieldCheck, Store, Truck, Users, Warehouse, X } from "lucide-react";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ const navigation = [
   { label: "Account security", href: "/dashboard/security", icon: LockKeyhole },
 ] satisfies { label: string; href: string; icon: typeof LayoutDashboard; permission?: Permission; platformOnly?: boolean }[];
 
-type Workspace = { name: string; subtitle: string; initials: string; scopeLabel: string; platformAccess: boolean; storefront: { id: string; name: string; slug: string; status: string } | null };
+type Workspace = { name: string; subtitle: string; initials: string; scopeLabel: string; platformAccess: boolean; storefront: { id: string; name: string; slug: string; status: string } | null; subscription: { active: boolean; reason: string | null; status: string; planName: string | null; currentPeriodEnd: Date | null } | null };
 
 export function DashboardShell({ children, user, capabilities, workspace }: { children: React.ReactNode; user: { name: string; email: string; platformRole: string }; capabilities: Permission[]; workspace: Workspace }) {
   const pathname = usePathname();
@@ -48,7 +48,7 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
           <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold">{workspace.name}</span><span className="block text-[11px] capitalize text-[#88948c]">{workspace.scopeLabel}</span></span>
           <ChevronDown className="size-4 text-[#89948d]" />
         </button>
-        {!isPlatformAdmin && workspace.storefront && <Link href={(workspace.storefront.status === "ACTIVE" ? `/store/${workspace.storefront.slug}` : `/preview/${workspace.storefront.id}`) as never} target="_blank" className="mt-3 flex items-center justify-between rounded-xl bg-[#eaf2e6] px-3 py-2 text-xs font-black text-[#164b36]">{workspace.storefront.status === "ACTIVE" ? "View public website" : "Preview website"}<ExternalLink className="size-3.5" /></Link>}
+        {!isPlatformAdmin && workspace.storefront && <Link href={(workspace.storefront.status === "ACTIVE" && workspace.subscription?.active ? `/store/${workspace.storefront.slug}` : `/preview/${workspace.storefront.id}`) as never} target="_blank" className="mt-3 flex items-center justify-between rounded-xl bg-[#eaf2e6] px-3 py-2 text-xs font-black text-[#164b36]">{workspace.storefront.status === "ACTIVE" && workspace.subscription?.active ? "View public website" : "Preview website"}<ExternalLink className="size-3.5" /></Link>}
       </div>
       <nav className="mt-5 flex-1 space-y-1 overflow-y-auto px-3">
         {navigation.filter(({ permission, platformOnly }) => (!platformOnly || isPlatformAdmin) && (!permission || capabilities.includes(permission))).map(({ label, href, icon: Icon }) => {
@@ -83,6 +83,7 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
           <button aria-label="Notifications" className="relative grid size-11 place-items-center rounded-xl border border-[#dfe5df] bg-white text-[#506057]"><Bell className="size-[18px]" /><span className="absolute right-2.5 top-2.5 size-2 rounded-full border-2 border-white bg-[#f07c53]" /></button>
         </div>
       </header>
+      {!isPlatformAdmin && workspace.subscription && !workspace.subscription.active && <div className="border-b border-[#f0d1c6] bg-[#fff2ec] px-4 py-3 text-[#8f452f] sm:px-7 lg:px-10"><div className="flex items-start gap-3 text-xs leading-5"><AlertTriangle className="mt-0.5 size-4 shrink-0" /><div><b>Workspace is read-only.</b> {workspace.subscription.reason} Existing orders, refunds, reports, and account security remain available.</div></div></div>}
       <main className="px-4 py-7 sm:px-7 lg:px-10 lg:py-9">{children}</main>
     </div>
   );

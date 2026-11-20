@@ -35,12 +35,15 @@ export async function assignSubscriptionAction(_state: SubscriptionActionState, 
   const start = new Date();
   const end = new Date(start); end.setDate(end.getDate() + 30);
   const previousPlan = capacity.subscription?.plan.name;
-  const subscription = await db.tenantSubscription.upsert({
-    where: { tenantId: parsed.data.tenantId },
-    create: { id: randomUUID(), tenantId: parsed.data.tenantId, planId: plan.id, status: "ACTIVE", currentPeriodStart: start, currentPeriodEnd: end },
-    update: { planId: plan.id, status: "ACTIVE", currentPeriodStart: start, currentPeriodEnd: end },
+  await db.$transaction(async tx => {
+    const subscription = await tx.tenantSubscription.upsert({
+      where: { tenantId: parsed.data.tenantId },
+      create: { id: randomUUID(), tenantId: parsed.data.tenantId, planId: plan.id, status: "ACTIVE", currentPeriodStart: start, currentPeriodEnd: end },
+      update: { planId: plan.id, status: "ACTIVE", currentPeriodStart: start, currentPeriodEnd: end },
+    });
+    await tx.tenant.update({ where: { id: parsed.data.tenantId }, data: { status: "ACTIVE" } });
+    await tx.auditLog.create({ data: { tenantId: parsed.data.tenantId, actorId: actor.id, action: "subscription.plan_assigned", entityType: "TenantSubscription", entityId: subscription.id, summary: `Assigned ${plan.name} monthly plan`, changes: { previousPlan, nextPlan: plan.name, currentPeriodEnd: end.toISOString() } } });
   });
-  await db.auditLog.create({ data: { tenantId: parsed.data.tenantId, actorId: actor.id, action: "subscription.plan_assigned", entityType: "TenantSubscription", entityId: subscription.id, summary: `Assigned ${plan.name} monthly plan`, changes: { previousPlan, nextPlan: plan.name, currentPeriodEnd: end.toISOString() } } });
   revalidateSubscriptionPages();
   return { status: "success", message: `${capacity.name} is now on ${plan.name} through ${end.toLocaleDateString("en-PK")}.` };
 }
@@ -54,6 +57,7 @@ export async function setSubscriptionStatusAction(_state: SubscriptionActionStat
   const end = new Date(); end.setDate(end.getDate() + 30);
   await db.$transaction([
     db.tenantSubscription.update({ where: { id: existing.id }, data: parsed.data.status === "ACTIVE" ? { status: "ACTIVE", currentPeriodStart: new Date(), currentPeriodEnd: end } : { status: parsed.data.status } }),
+    db.tenant.update({ where: { id: parsed.data.tenantId }, data: { status: parsed.data.status === "ACTIVE" ? "ACTIVE" : "SUSPENDED" } }),
     db.auditLog.create({ data: { tenantId: parsed.data.tenantId, actorId: actor.id, action: "subscription.status_changed", entityType: "TenantSubscription", entityId: existing.id, summary: `Changed subscription from ${existing.status} to ${parsed.data.status}` } }),
   ]);
   revalidateSubscriptionPages();
@@ -75,7 +79,17 @@ export async function updateSubscriptionPlanAction(_state: SubscriptionActionSta
   });
   if (!parsed.success) return { status: "error", message: "Enter valid pricing and positive limits for every allowance." };
 
-  const subscribers = await db.tenantSubscription.findMany({ where: { planId: parsed.data.planId }, select: { tenantId: true } });
+  const [currentPlan, subscribers] = await Promise.all([
+    db.subscriptionPlan.findUnique({ where: { id: parsed.data.planId } }),
+    db.tenantSubscription.findMany({ where: { planId: parsed.data.planId }, select: { tenantId: true } }),
+  ]);
+  if (!currentPlan) return { status: "error", message: "The subscription plan is no longer available." };
+  const allowanceShrinks = parsed.data.storeLimit < currentPlan.storeLimit || parsed.data.staffLimit < currentPlan.staffLimit || parsed.data.productLimit < currentPlan.productLimit || parsed.data.mediaStorageMb < currentPlan.mediaStorageMb;
+  if (allowanceShrinks && subscribers.length > 0) {
+    const capacities = await Promise.all(subscribers.map(({ tenantId }) => getTenantSubscriptionCapacity(tenantId)));
+    const blocked = capacities.filter(Boolean).filter(capacity => Object.values(planCapacityConflicts(capacity!.usage, parsed.data)).some(Boolean));
+    if (blocked.length > 0) return { status: "error", message: `These limits are below the current usage of ${blocked.slice(0, 3).map(item => item!.name).join(", ")}${blocked.length > 3 ? ` and ${blocked.length - 3} more` : ""}. Move those businesses to another plan or reduce their usage first.` };
+  }
   const plan = await db.subscriptionPlan.update({ where: { id: parsed.data.planId }, data: { monthlyMinor: Math.round(parsed.data.monthlyPrice * 100), storeLimit: parsed.data.storeLimit, staffLimit: parsed.data.staffLimit, productLimit: parsed.data.productLimit, mediaStorageMb: parsed.data.mediaStorageMb } });
   if (subscribers.length > 0) {
     await db.auditLog.createMany({ data: subscribers.map(({ tenantId }) => ({ tenantId, actorId: actor.id, action: "subscription.plan_updated", entityType: "SubscriptionPlan", entityId: plan.id, summary: `Updated ${plan.name} pricing and allowances`, changes: parsed.data })) });

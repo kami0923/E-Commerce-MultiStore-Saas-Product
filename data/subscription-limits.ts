@@ -1,7 +1,7 @@
 import "server-only";
 
 import { db } from "@/lib/db";
-import { canFitMedia, mediaLimitBytes } from "@/lib/subscription-policy";
+import { canFitMedia, mediaLimitBytes, subscriptionAccessDecision } from "@/lib/subscription-policy";
 
 type LimitKind = "store" | "team member" | "product";
 
@@ -69,10 +69,17 @@ export async function getTenantSubscriptionCapacity(tenantId: string) {
 }
 
 function subscriptionUnavailable(capacity: Awaited<ReturnType<typeof getTenantSubscriptionCapacity>>) {
-  if (!capacity?.subscription) return "No subscription is assigned to this business.";
-  if (!["ACTIVE", "TRIALING"].includes(capacity.subscription.status)) return "The business subscription is not active.";
-  if (capacity.subscription.currentPeriodEnd <= new Date()) return "The business subscription period has expired.";
-  return null;
+  if (!capacity) return "The business is unavailable.";
+  const decision = subscriptionAccessDecision(capacity.subscription);
+  return decision.active ? null : decision.reason;
+}
+
+export async function getTenantSubscriptionAccess(tenantId: string) {
+  const subscription = await db.tenantSubscription.findUnique({
+    where: { tenantId },
+    select: { status: true, currentPeriodEnd: true, plan: { select: { id: true, name: true } } },
+  });
+  return { ...subscriptionAccessDecision(subscription), subscription };
 }
 
 export async function canCreateStore(tenantId: string) {

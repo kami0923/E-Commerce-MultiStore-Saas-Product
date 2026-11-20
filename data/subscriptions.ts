@@ -2,6 +2,7 @@ import "server-only";
 
 import { getAuthorizedStoreScope } from "@/data/auth";
 import { db } from "@/lib/db";
+import { subscriptionAccessDecision } from "@/lib/subscription-policy";
 
 export async function getSubscriptionWorkspace() {
   const scope = await getAuthorizedStoreScope("stores.view");
@@ -67,6 +68,7 @@ export async function getSubscriptionWorkspace() {
     plans,
     tenants: tenants.map(tenant => ({
       ...tenant,
+      effectiveSubscriptionStatus: tenant.subscription ? (subscriptionAccessDecision(tenant.subscription).active ? tenant.subscription.status : tenant.subscription.currentPeriodEnd <= new Date() && ["ACTIVE", "TRIALING"].includes(tenant.subscription.status) ? "EXPIRED" : tenant.subscription.status) : "UNASSIGNED",
       usage: {
         stores: tenant._count.stores,
         staff: tenant._count.memberships + tenant._count.invitations,

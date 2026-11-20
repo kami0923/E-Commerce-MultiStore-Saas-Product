@@ -10,7 +10,7 @@ export default async function SubscriptionPage() {
   return <SectionPage eyebrow="Commercial controls" title="Plans & usage" description="Monitor every business allowance, renew access and prevent platform costs from growing beyond the assigned monthly plan." icon={Gauge}>
     <section className="grid gap-3 sm:grid-cols-3">
       <Metric label="Businesses in view" value={String(tenants.length)} icon={Store} />
-      <Metric label="Active or trial" value={String(tenants.filter(item => item.subscription && ["ACTIVE", "TRIALING"].includes(item.subscription.status)).length)} icon={CheckCircle2} />
+      <Metric label="Active or trial" value={String(tenants.filter(item => ["ACTIVE", "TRIALING"].includes(item.effectiveSubscriptionStatus)).length)} icon={CheckCircle2} />
       <Metric label="Markets" value="PKR + USD" icon={CalendarDays} />
     </section>
 
@@ -21,7 +21,7 @@ export default async function SubscriptionPage() {
         return <article key={tenant.id} className="rounded-[28px] border border-[#dfe6df] bg-white p-5 shadow-[0_18px_50px_rgba(21,52,37,.06)] sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div><p className="text-[10px] font-black uppercase tracking-[.18em] text-[#87938b]">{tenant.countryCode === "PK" ? "Pakistan market" : "International market"}</p><h2 className="mt-1 text-xl font-black">{tenant.name}</h2></div>
-            <span className={`rounded-full px-3 py-1.5 text-[10px] font-black ${statusTone(tenant.subscription?.status)}`}>{plan ? `${plan.name} · ${tenant.subscription!.status}` : "NO PLAN"}</span>
+            <span className={`rounded-full px-3 py-1.5 text-[10px] font-black ${statusTone(tenant.effectiveSubscriptionStatus)}`}>{plan ? `${plan.name} · ${tenant.effectiveSubscriptionStatus}` : "NO PLAN"}</span>
           </div>
           {plan ? <>
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
