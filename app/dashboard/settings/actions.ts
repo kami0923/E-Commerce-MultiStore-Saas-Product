@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireTenantPermission } from "@/data/auth";
 import { db } from "@/lib/db";
+import { storefrontThemeKeys } from "@/lib/storefront-themes";
 
-const schema = z.object({ tenantId: z.string().min(1), storeId: z.string().min(1), defaultLocale: z.enum(["en", "ur"]), enabledLocales: z.array(z.enum(["en", "ur"])), themeKey: z.enum(["atelier", "market", "luxe"]).optional(), customDomain: z.string().trim().max(253).optional() });
+const themeSchema = z.enum(storefrontThemeKeys as [string, ...string[]]);
+const schema = z.object({ tenantId: z.string().min(1), storeId: z.string().min(1), defaultLocale: z.enum(["en", "ur"]), enabledLocales: z.array(z.enum(["en", "ur"])), themeKey: themeSchema.optional(), customDomain: z.string().trim().max(253).optional() });
 
 export async function updateStoreSettingsAction(formData: FormData) {
   const result = schema.safeParse({ tenantId: formData.get("tenantId"), storeId: formData.get("storeId"), defaultLocale: formData.get("defaultLocale"), enabledLocales: formData.getAll("enabledLocale"), themeKey: formData.get("themeKey") || undefined, customDomain: formData.get("customDomain") });

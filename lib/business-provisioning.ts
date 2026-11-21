@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { generateInvitationToken } from "@/lib/invitations";
 import { scheduleNotificationDispatch } from "@/lib/notification-jobs";
 
-const storefrontThemeRotation = ["atelier", "market", "luxe"] as const;
+import { recommendedTheme } from "@/lib/storefront-themes";
 function slugify(value: string) { const base = value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 52) || "store"; return `${base}-${randomUUID().slice(0, 6)}`; }
 
 export async function provisionBusiness(input: { actor: { id: string; name: string }; appUrl: string; name: string; ownerEmail: string; countryCode: "PK" | "INTL"; baseCurrency: "PKR" | "USD"; defaultLocale: "en" | "ur"; verticals: StoreVertical[]; applicationId?: string }) {
@@ -22,7 +22,7 @@ export async function provisionBusiness(input: { actor: { id: string; name: stri
     }
     const tenant = await tx.tenant.create({ data: { name: input.name, slug: slugify(input.name), status: "TRIAL", countryCode: input.countryCode, baseCurrency: input.baseCurrency, defaultLocale: input.defaultLocale } });
     const stores = [];
-    for (const [index, storeVertical] of input.verticals.entries()) stores.push(await tx.store.create({ data: { tenantId: tenant.id, name: input.verticals.length === 1 ? input.name : `${input.name} ${storeVertical.toLowerCase().replace("_", " ")}`, slug: slugify(`${input.name}-${storeVertical}`), vertical: storeVertical, currency: input.baseCurrency, defaultLocale: input.defaultLocale, enabledLocales: ["en", "ur"], status: "ACTIVE", themeKey: storefrontThemeRotation[(existingStoreCount + index) % storefrontThemeRotation.length] } }));
+    for (const [index, storeVertical] of input.verticals.entries()) stores.push(await tx.store.create({ data: { tenantId: tenant.id, name: input.verticals.length === 1 ? input.name : `${input.name} ${storeVertical.toLowerCase().replace("_", " ")}`, slug: slugify(`${input.name}-${storeVertical}`), vertical: storeVertical, currency: input.baseCurrency, defaultLocale: input.defaultLocale, enabledLocales: ["en", "ur"], status: "ACTIVE", themeKey: recommendedTheme(storeVertical, existingStoreCount + index) } }));
     for (const store of stores) {
       await tx.shippingProfile.create({ data: { tenantId: tenant.id, storeId: store.id, name: input.countryCode === "PK" ? "Pakistan standard" : "International standard", countryCode: input.countryCode === "PK" ? "PK" : "INTL", rateMinor: input.countryCode === "PK" ? 25000 : 1000, freeAboveMinor: input.countryCode === "PK" ? 500000 : 10000, estimatedDays: input.countryCode === "PK" ? "2–5 business days" : "5–10 business days" } });
       await tx.paymentConnection.create({ data: { tenantId: tenant.id, storeId: store.id, provider: "CASH_ON_DELIVERY", displayName: "Cash on delivery", status: "CONNECTED", enabled: true, testMode: false } });

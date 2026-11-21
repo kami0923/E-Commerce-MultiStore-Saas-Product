@@ -9,6 +9,7 @@ import { StorefrontHeroSlider } from "@/components/storefront-hero-slider";
 import { StorefrontMobileMenu } from "@/components/storefront-mobile-menu";
 import { OrderTracker } from "@/components/order-tracker";
 import { ProductDepthRail } from "@/components/product-depth-rail";
+import { getStorefrontTheme } from "@/lib/storefront-themes";
 
 type StorefrontData = NonNullable<Awaited<ReturnType<typeof import("@/data/storefront").getStorefrontPreview>>>;
 type StorefrontProductData = NonNullable<Awaited<ReturnType<typeof import("@/data/storefront").getPublishedProduct>>>;
@@ -107,16 +108,6 @@ const verticals = {
   },
 } as const;
 
-const themes = {
-  atelier: { accent: "#1b3b2d", surface: "#f8f5ef", ink: "#1d241f", radius: "2rem", highlight: "#dce8d7" },
-  market: { accent: "#173c4a", surface: "#eef5f3", ink: "#102d32", radius: "1rem", highlight: "#c8eee5" },
-  luxe: { accent: "#35261d", surface: "#f4ede3", ink: "#211914", radius: ".25rem", highlight: "#d8bc91" },
-} as const;
-
-function getTheme(themeKey: string) {
-  return themes[themeKey as keyof typeof themes] ?? themes.atelier;
-}
-
 function getStoreVariant(value: string) {
   let hash = 0;
   for (const character of value) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
@@ -125,7 +116,7 @@ function getStoreVariant(value: string) {
 
 function StoreShell({ store, preview, children }: { store: StorefrontData; preview: boolean; children: ReactNode }) {
   const config = verticals[store.vertical];
-  const theme = getTheme(store.themeKey);
+  const theme = getStorefrontTheme(store.themeKey);
   const base = `/store/${store.slug}`;
   const nav = [["Shop", "shop"], ["Collections", "collections"], ["Our story", "about"], ["Track order", "track"]] as const;
   const vars = { "--store-accent": theme.accent, "--store-soft": theme.surface, "--store-ink": theme.ink, "--store-radius": theme.radius, "--store-highlight": theme.highlight } as CSSProperties;
@@ -157,7 +148,7 @@ function ProductGrid({ store, filters = false }: { store: StorefrontData; filter
 
 export function Storefront({ store, preview = false }: { store: StorefrontData; preview?: boolean }) {
   const config = verticals[store.vertical];
-  const theme = getTheme(store.themeKey);
+  const theme = getStorefrontTheme(store.themeKey);
   const base = `/store/${store.slug}`;
   return <StoreShell store={store} preview={preview}>
     <section className="storefront-hero mx-auto grid min-h-[680px] max-w-[1600px] gap-0 px-3 py-3 sm:px-5 sm:py-5 lg:grid-cols-[.86fr_1.14fr]">
@@ -197,5 +188,6 @@ export function StorefrontProductPage({ store, product }: { store: StorefrontDat
   const specifications = product.attributes && typeof product.attributes === "object" && !Array.isArray(product.attributes)
     ? Object.entries(product.attributes).filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1]))
     : [];
-  return <StoreShell store={store} preview={false}><section className="mx-auto max-w-7xl px-5 py-8 sm:px-8"><div className="mb-7 flex items-center gap-2 text-xs text-black/40"><Link href={`/store/${store.slug}` as never}>Home</Link><span>/</span><Link href={`/store/${store.slug}/shop` as never}>Shop</Link><span>/</span><span className="text-black/70">{product.name}</span></div><div className="grid gap-10 lg:grid-cols-[1.08fr_.92fr]"><StorefrontProductGallery images={galleryImages} productName={product.name} /><div className="flex flex-col justify-center lg:px-8"><p className="text-xs font-black uppercase tracking-[.18em] text-black/40">{product.brand || product.productType || originalConfig.productFallback}</p><h1 className="mt-4 font-serif text-5xl leading-[1.02] sm:text-6xl">{product.name}</h1><p className="mt-7 text-[15px] leading-8 text-black/55">{product.description || `A considered ${originalConfig.productFallback.toLowerCase()} selected by ${store.tenant.name} for its quality, character and everyday versatility.`}</p>{specifications.length > 0 && <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-black/10 bg-black/10">{specifications.map(([key, value]) => <div key={key} className="bg-white/80 p-3"><dt className="text-[10px] font-black uppercase tracking-[.13em] text-black/40">{key}</dt><dd className="mt-1 text-sm font-semibold">{value}</dd></div>)}</dl>}<div className="mt-8"><p className="mb-3 text-xs font-black uppercase tracking-[.16em] text-black/50">Choose an option</p><ProductPurchase productSlug={product.slug} name={product.name} currency={store.currency} image={image} variants={product.variants} /></div><div className="mt-9 grid gap-3 border-y border-black/10 py-6 text-sm"><p className="flex items-center gap-3"><Truck className="size-4 text-black/45" /> Delivery coordinated by the merchant</p><p className="flex items-center gap-3"><ShieldCheck className="size-4 text-black/45" /> Stock reserved securely at checkout</p><p className="flex items-center gap-3"><Heart className="size-4 text-black/45" /> Carefully selected by {store.tenant.name}</p></div></div></div></section><section className="mt-12 bg-[var(--store-accent)] px-5 py-16 text-white sm:px-8"><div className="mx-auto max-w-7xl text-center"><p className="text-xs font-bold uppercase tracking-[.2em] text-white/55">The details matter</p><h2 className="mx-auto mt-4 max-w-3xl font-serif text-4xl sm:text-5xl">Designed to become part of your story, not just your wardrobe.</h2></div></section></StoreShell>;
+  const related = store.products.filter(item => item.id !== product.id).slice(0, 7);
+  return <StoreShell store={store} preview={false}><section className="storefront-product-page mx-auto max-w-7xl px-5 py-8 sm:px-8"><div className="storefront-breadcrumb mb-7 flex items-center gap-2 overflow-hidden text-xs text-black/40"><Link href={`/store/${store.slug}` as never}>Home</Link><span>/</span><Link href={`/store/${store.slug}/shop` as never}>Shop</Link><span>/</span><span className="truncate text-black/70">{product.name}</span></div><div className="grid gap-10 lg:grid-cols-[1.08fr_.92fr]"><StorefrontProductGallery images={galleryImages} productName={product.name} /><div className="storefront-product-info flex flex-col justify-center lg:sticky lg:top-28 lg:self-start lg:px-8"><p className="text-xs font-black uppercase tracking-[.18em] text-black/40">{product.brand || product.productType || originalConfig.productFallback}</p><h1 className="mt-4 font-serif text-5xl leading-[1.02] sm:text-6xl">{product.name}</h1><p className="mt-7 text-[15px] leading-8 text-black/55">{product.description || `A considered ${originalConfig.productFallback.toLowerCase()} selected by ${store.tenant.name} for its quality, character and everyday versatility.`}</p>{specifications.length > 0 && <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-black/10 bg-black/10">{specifications.map(([key, value]) => <div key={key} className="bg-white/80 p-3"><dt className="text-[10px] font-black uppercase tracking-[.13em] text-black/40">{key}</dt><dd className="mt-1 text-sm font-semibold">{value}</dd></div>)}</dl>}<div className="storefront-purchase-panel mt-8"><p className="mb-3 text-xs font-black uppercase tracking-[.16em] text-black/50">Choose an option</p><ProductPurchase productSlug={product.slug} name={product.name} currency={store.currency} image={image} variants={product.variants} /></div><div className="mt-9 grid gap-3 border-y border-black/10 py-6 text-sm"><p className="flex items-center gap-3"><Truck className="size-4 text-black/45" /> Delivery coordinated by the merchant</p><p className="flex items-center gap-3"><ShieldCheck className="size-4 text-black/45" /> Stock reserved securely at checkout</p><p className="flex items-center gap-3"><Heart className="size-4 text-black/45" /> Carefully selected by {store.tenant.name}</p></div></div></div></section><section className="mt-12 bg-[var(--store-accent)] px-5 py-16 text-white sm:px-8"><div className="mx-auto max-w-7xl text-center"><p className="text-xs font-bold uppercase tracking-[.2em] text-white/55">The details matter</p><h2 className="mx-auto mt-4 max-w-3xl font-serif text-4xl sm:text-5xl">Designed to become part of your story, not just your wardrobe.</h2></div></section>{related.length > 0 && <ProductDepthRail products={related} storeSlug={store.slug} currency={store.currency} fallbackImages={originalConfig.images} />}</StoreShell>;
 }
