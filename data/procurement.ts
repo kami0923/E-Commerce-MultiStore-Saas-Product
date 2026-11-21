@@ -22,9 +22,9 @@ export async function getProcurementWorkspace() {
       },
     }),
     db.supplier.findMany({
-      where: { store: storeWhere, active: true },
+      where: { store: storeWhere },
       orderBy: [{ store: { name: "asc" } }, { name: "asc" }],
-      select: { id: true, tenantId: true, storeId: true, name: true, email: true, phone: true, store: { select: { name: true } } },
+      select: { id: true, tenantId: true, storeId: true, name: true, email: true, phone: true, notes: true, active: true, store: { select: { name: true } } },
     }),
     db.purchaseOrder.findMany({
       where: { store: storeWhere },

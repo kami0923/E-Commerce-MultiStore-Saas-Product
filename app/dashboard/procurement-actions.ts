@@ -44,6 +44,46 @@ export async function createSupplierAction(_state: CommerceModuleState, formData
   }
 }
 
+const supplierUpdateSchema = supplierSchema.extend({ supplierId: id });
+
+export async function updateSupplierAction(_state: CommerceModuleState, formData: FormData): Promise<CommerceModuleState> {
+  const parsed = supplierUpdateSchema.safeParse({
+    supplierId: formData.get("supplierId"), tenantId: formData.get("tenantId"), storeId: formData.get("storeId"),
+    name: formData.get("name"), email: formData.get("email") ?? "", phone: formData.get("phone") || undefined,
+    notes: formData.get("notes") || undefined,
+  });
+  if (!parsed.success) return { status: "error", errors: parsed.error.flatten().fieldErrors };
+  const { supplierId, ...value } = parsed.data;
+  const scope = await requireTenantPermission(value.tenantId, "inventory.adjust", value.storeId);
+  try {
+    const changed = await db.supplier.updateMany({
+      where: { id: supplierId, tenantId: value.tenantId, storeId: value.storeId },
+      data: { name: value.name, email: value.email || null, phone: value.phone || null, notes: value.notes || null },
+    });
+    if (changed.count !== 1) return { status: "error", message: "Supplier not found in this store." };
+    await db.auditLog.create({ data: { tenantId: value.tenantId, storeId: value.storeId, actorId: scope.user.id, action: "supplier.updated", entityType: "Supplier", entityId: supplierId, summary: `Updated supplier ${value.name}` } });
+    refreshProcurement();
+    return { status: "success", message: `${value.name} was updated.` };
+  } catch {
+    return { status: "error", message: "The supplier could not be updated. Check that its name is unique in this store." };
+  }
+}
+
+const supplierToggleSchema = z.object({ supplierId: id, tenantId: id, storeId: id, active: z.enum(["true", "false"]) });
+
+export async function toggleSupplierAction(formData: FormData) {
+  const value = supplierToggleSchema.parse(Object.fromEntries(formData));
+  const scope = await requireTenantPermission(value.tenantId, "inventory.adjust", value.storeId);
+  const active = value.active === "true";
+  const supplier = await db.supplier.findFirst({ where: { id: value.supplierId, tenantId: value.tenantId, storeId: value.storeId }, select: { name: true } });
+  if (!supplier) throw new Error("Supplier not found in this store.");
+  await db.$transaction([
+    db.supplier.update({ where: { id: value.supplierId }, data: { active } }),
+    db.auditLog.create({ data: { tenantId: value.tenantId, storeId: value.storeId, actorId: scope.user.id, action: active ? "supplier.activated" : "supplier.deactivated", entityType: "Supplier", entityId: value.supplierId, summary: `${active ? "Activated" : "Deactivated"} supplier ${supplier.name}` } }),
+  ]);
+  refreshProcurement();
+}
+
 const purchaseOrderSchema = z.object({
   tenantId: id, storeId: id, supplierId: id,
   expectedAt: z.string().optional(), notes: optionalText(500),
@@ -120,7 +160,11 @@ export async function receivePurchaseOrderLineAction(formData: FormData) {
     if (value.quantity > remaining) throw new Error(`Only ${remaining} units remain to be received.`);
     const inventory = await tx.inventoryItem.findUnique({ where: { tenantId_storeId_variantId_locationKey: { tenantId: value.tenantId, storeId: value.storeId, variantId: line.variantId, locationKey: "main" } } });
     if (!inventory) throw new Error("Inventory record not found.");
-    await tx.inventoryItem.update({ where: { id: inventory.id }, data: { onHand: { increment: value.quantity }, incoming: Math.max(0, inventory.incoming - value.quantity) } });
+    const changed = await tx.inventoryItem.updateMany({
+      where: { id: inventory.id, incoming: { gte: value.quantity } },
+      data: { onHand: { increment: value.quantity }, incoming: { decrement: value.quantity } },
+    });
+    if (changed.count !== 1) throw new Error("Incoming stock changed while receiving. Refresh and try again.");
     await tx.purchaseOrderLine.update({ where: { id: line.id }, data: { receivedQuantity: { increment: value.quantity } } });
     await tx.productVariant.update({ where: { id: line.variantId }, data: { costMinor: line.unitCostMinor } });
     const progress = order.lines.map(item => item.id === line.id ? { ...item, receivedQuantity: item.receivedQuantity + value.quantity } : item);

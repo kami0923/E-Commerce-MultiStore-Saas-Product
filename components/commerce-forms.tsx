@@ -138,12 +138,12 @@ function ChoiceGrid({ title, hint, options, name, selected = new Set<string>() }
 
 export function InventoryAdjustmentForm({ item }: { item: { id: string; tenantId: string; storeId: string } }) {
   const [state, action, pending] = useActionState(adjustInventoryAction, initialState);
-  return <form action={action} className="grid min-w-[360px] grid-cols-[90px_1fr_auto] gap-2">
+  return <form action={action} className="grid min-w-0 grid-cols-1 gap-2 sm:min-w-[360px] sm:grid-cols-[90px_1fr_auto]">
     <input type="hidden" name="inventoryId" value={item.id} /><input type="hidden" name="tenantId" value={item.tenantId} /><input type="hidden" name="storeId" value={item.storeId} />
     <input aria-label="Stock adjustment" className={input} name="delta" type="number" placeholder="+ / −" required />
     <input aria-label="Adjustment reason" className={input} name="reason" placeholder="Reason: received, correction…" required />
-    <button disabled={pending} aria-label="Save stock adjustment" className="grid size-11 place-items-center rounded-xl bg-[#164b36] text-white disabled:opacity-50"><SlidersHorizontal className="size-4" /></button>
-    {(state.message || state.errors) && <div className="col-span-3"><ActionMessage state={state} /></div>}
+    <button disabled={pending} aria-label="Save stock adjustment" className="grid h-11 w-full place-items-center rounded-xl bg-[#164b36] text-white disabled:opacity-50 sm:size-11"><SlidersHorizontal className="size-4" /></button>
+    {(state.message || state.errors) && <div className="sm:col-span-3"><ActionMessage state={state} /></div>}
   </form>;
 }
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { Minus, Plus, Save, Truck } from "lucide-react";
+import { Minus, Pencil, Plus, Power, Save, Truck } from "lucide-react";
 import { useActionState, useMemo, useState } from "react";
-import { createPurchaseOrderAction, createSupplierAction } from "@/app/dashboard/procurement-actions";
+import { createPurchaseOrderAction, createSupplierAction, toggleSupplierAction, updateSupplierAction } from "@/app/dashboard/procurement-actions";
 import type { CommerceModuleState } from "@/app/dashboard/commerce-actions";
 
 const initialState: CommerceModuleState = { status: "idle" };
@@ -16,7 +16,7 @@ function Message({ state }: { state: CommerceModuleState }) {
 }
 
 type StoreOption = { id: string; tenantId: string; name: string; currency: string; tenant: { name: string }; products: { name: string; variants: { id: string; sku: string; title: string; costMinor: number | null }[] }[] };
-type SupplierOption = { id: string; storeId: string; name: string };
+type SupplierOption = { id: string; tenantId: string; storeId: string; name: string; email?: string | null; phone?: string | null; notes?: string | null; active: boolean; store?: { name: string } };
 
 export function SupplierForm({ stores }: { stores: StoreOption[] }) {
   const [state, action, pending] = useActionState(createSupplierAction, initialState);
@@ -36,7 +36,7 @@ export function PurchaseOrderForm({ stores, suppliers }: { stores: StoreOption[]
   const [rows, setRows] = useState([0]);
   const store = stores.find(item => item.id === storeId);
   const variants = useMemo(() => store?.products.flatMap(product => product.variants.map(variant => ({ ...variant, productName: product.name }))) ?? [], [store]);
-  const storeSuppliers = suppliers.filter(supplier => supplier.storeId === storeId);
+  const storeSuppliers = suppliers.filter(supplier => supplier.storeId === storeId && supplier.active);
   return <form action={action} className="space-y-5">
     <input type="hidden" name="tenantId" value={store?.tenantId ?? ""} />
     <div className="grid gap-4 sm:grid-cols-2"><label className={label}>Store<select className={input} name="storeId" value={storeId} onChange={event => setStoreId(event.target.value)} required>{stores.map(item => <option key={item.id} value={item.id}>{item.tenant.name} · {item.name}</option>)}</select></label><label className={label}>Supplier<select className={input} name="supplierId" required defaultValue=""><option value="" disabled>Select supplier</option>{storeSuppliers.map(supplier => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</select></label><label className={label}>Expected date<input className={input} name="expectedAt" type="date" /></label><label className={label}>Internal note<input className={input} name="notes" placeholder="Delivery or purchasing instructions" /></label></div>
@@ -46,6 +46,24 @@ export function PurchaseOrderForm({ stores, suppliers }: { stores: StoreOption[]
     {storeSuppliers.length === 0 && <p className="rounded-xl bg-[#fff8df] px-4 py-3 text-xs font-semibold text-[#806b2c]">Add a supplier for this store before creating a purchase order.</p>}
     <Message state={state} /><button disabled={pending || !store || storeSuppliers.length === 0 || variants.length === 0} className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#164b36] px-5 text-sm font-black text-white disabled:opacity-50"><Save className="size-4" />{pending ? "Saving…" : "Save purchase order draft"}</button>
   </form>;
+}
+
+export function SupplierManager({ suppliers }: { suppliers: SupplierOption[] }) {
+  if (suppliers.length === 0) return <p className="rounded-xl bg-[#f7f9f6] p-5 text-sm text-[#7c8981]">Your suppliers will appear here after you add the first one.</p>;
+  return <div className="grid gap-3 lg:grid-cols-2">{suppliers.map(supplier => <SupplierEditor key={supplier.id} supplier={supplier} />)}</div>;
+}
+
+function SupplierEditor({ supplier }: { supplier: SupplierOption }) {
+  const [state, action, pending] = useActionState(updateSupplierAction, initialState);
+  return <details className="group rounded-2xl border border-[#e3e8e3] bg-white p-4 open:shadow-[0_18px_45px_rgba(18,49,35,.08)]">
+    <summary className="flex cursor-pointer list-none items-start justify-between gap-3"><div><div className="flex flex-wrap items-center gap-2"><p className="font-black">{supplier.name}</p><span className={`rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-[.12em] ${supplier.active ? "bg-[#edf5df] text-[#4e7841]" : "bg-[#eef1ef] text-[#667169]"}`}>{supplier.active ? "Active" : "Inactive"}</span></div><p className="mt-1 text-xs text-[#7c8981]">{supplier.store?.name}{supplier.email ? ` · ${supplier.email}` : ""}{supplier.phone ? ` · ${supplier.phone}` : ""}</p></div><Pencil className="mt-1 size-4 text-[#668071] transition group-open:rotate-[-12deg]" /></summary>
+    <form action={action} className="mt-4 space-y-3 border-t border-[#edf0ed] pt-4">
+      <input type="hidden" name="supplierId" value={supplier.id} /><input type="hidden" name="tenantId" value={supplier.tenantId} /><input type="hidden" name="storeId" value={supplier.storeId} />
+      <div className="grid gap-3 sm:grid-cols-2"><label className={label}>Supplier name<input className={input} name="name" defaultValue={supplier.name} required /></label><label className={label}>Email<input className={input} name="email" type="email" defaultValue={supplier.email ?? ""} /></label><label className={label}>Phone<input className={input} name="phone" defaultValue={supplier.phone ?? ""} /></label><label className={label}>Internal note<input className={input} name="notes" defaultValue={supplier.notes ?? ""} /></label></div>
+      <Message state={state} /><div className="flex flex-wrap gap-2"><button disabled={pending} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#164b36] px-4 text-xs font-black text-white disabled:opacity-50"><Save className="size-3.5" />{pending ? "Saving…" : "Save details"}</button></div>
+    </form>
+    <form action={toggleSupplierAction} className="mt-2"><input type="hidden" name="supplierId" value={supplier.id} /><input type="hidden" name="tenantId" value={supplier.tenantId} /><input type="hidden" name="storeId" value={supplier.storeId} /><input type="hidden" name="active" value={String(!supplier.active)} /><button className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#dfe5df] px-4 text-xs font-black text-[#526158]"><Power className="size-3.5" />{supplier.active ? "Deactivate supplier" : "Reactivate supplier"}</button></form>
+  </details>;
 }
 
 export function ProcurementEmptyState() {
