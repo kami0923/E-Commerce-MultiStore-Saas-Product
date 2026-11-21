@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Activity, AlertTriangle, Banknote, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardCheck, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LockKeyhole, LogOut, Menu, MessageCircle, Settings2, ShieldCheck, Store, Truck, Users, Warehouse, X } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/app/(auth)/actions";
@@ -11,26 +11,26 @@ import type { Permission } from "@/lib/permissions";
 import { DashboardCommandPalette } from "@/components/dashboard-command-palette";
 
 const navigation = [
-  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Platform health", href: "/dashboard/platform-health", icon: Activity, platformOnly: true },
-  { label: "Merchant applications", href: "/dashboard/onboarding", icon: ClipboardCheck, platformOnly: true },
-  { label: "Businesses", href: "/dashboard/businesses", icon: Building2, permission: "tenant.view" },
-  { label: "Stores", href: "/dashboard/stores", icon: Store, permission: "stores.view" },
-  { label: "Catalog", href: "/dashboard/catalog", icon: Boxes, permission: "products.view" },
-  { label: "Media library", href: "/dashboard/media", icon: Images, permission: "products.view" },
-  { label: "Inventory", href: "/dashboard/inventory", icon: Warehouse, permission: "inventory.view" },
-  { label: "Suppliers & purchasing", href: "/dashboard/procurement", icon: Truck, permission: "inventory.view" },
-  { label: "Orders", href: "/dashboard/orders", icon: ClipboardList, permission: "orders.view" },
-  { label: "Payments & settlements", href: "/dashboard/payments", icon: Banknote, permission: "orders.view" },
-  { label: "Delivery & gateways", href: "/dashboard/commerce-setup", icon: CreditCard, permission: "stores.manage" },
-  { label: "Plans & usage", href: "/dashboard/subscription", icon: Gauge, permission: "stores.view" },
-  { label: "Customer care", href: "/dashboard/customer-care", icon: Headphones, permission: "orders.manage" },
-  { label: "WhatsApp Business", href: "/dashboard/whatsapp", icon: MessageCircle, permission: "stores.manage" },
-  { label: "Team & roles", href: "/dashboard/team", icon: Users, permission: "staff.view" },
-  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3, permission: "analytics.view" },
-  { label: "Audit logs", href: "/dashboard/audit", icon: ShieldCheck, permission: "audit.view" },
-  { label: "Account security", href: "/dashboard/security", icon: LockKeyhole },
-] satisfies { label: string; href: string; icon: typeof LayoutDashboard; permission?: Permission; platformOnly?: boolean }[];
+  { label: "Overview", href: "/dashboard", icon: LayoutDashboard, group: "Command" },
+  { label: "Platform health", href: "/dashboard/platform-health", icon: Activity, group: "Command", platformOnly: true },
+  { label: "Merchant applications", href: "/dashboard/onboarding", icon: ClipboardCheck, group: "Commerce", platformOnly: true },
+  { label: "Businesses", href: "/dashboard/businesses", icon: Building2, group: "Commerce", permission: "tenant.view" },
+  { label: "Stores", href: "/dashboard/stores", icon: Store, group: "Commerce", permission: "stores.view" },
+  { label: "Catalog", href: "/dashboard/catalog", icon: Boxes, group: "Products", permission: "products.view" },
+  { label: "Media library", href: "/dashboard/media", icon: Images, group: "Products", permission: "products.view" },
+  { label: "Inventory", href: "/dashboard/inventory", icon: Warehouse, group: "Products", permission: "inventory.view" },
+  { label: "Suppliers & purchasing", href: "/dashboard/procurement", icon: Truck, group: "Products", permission: "inventory.view" },
+  { label: "Orders", href: "/dashboard/orders", icon: ClipboardList, group: "Operations", permission: "orders.view" },
+  { label: "Payments & settlements", href: "/dashboard/payments", icon: Banknote, group: "Operations", permission: "orders.view" },
+  { label: "Delivery & gateways", href: "/dashboard/commerce-setup", icon: CreditCard, group: "Operations", permission: "stores.manage" },
+  { label: "Plans & usage", href: "/dashboard/subscription", icon: Gauge, group: "Growth", permission: "stores.view" },
+  { label: "Customer care", href: "/dashboard/customer-care", icon: Headphones, group: "Growth", permission: "orders.manage" },
+  { label: "WhatsApp Business", href: "/dashboard/whatsapp", icon: MessageCircle, group: "Growth", permission: "stores.manage" },
+  { label: "Team & roles", href: "/dashboard/team", icon: Users, group: "Governance", permission: "staff.view" },
+  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3, group: "Governance", permission: "analytics.view" },
+  { label: "Audit logs", href: "/dashboard/audit", icon: ShieldCheck, group: "Governance", permission: "audit.view" },
+  { label: "Account security", href: "/dashboard/security", icon: LockKeyhole, group: "Governance" },
+] satisfies { label: string; href: string; icon: typeof LayoutDashboard; group: string; permission?: Permission; platformOnly?: boolean }[];
 
 type Workspace = { name: string; subtitle: string; initials: string; scopeLabel: string; platformAccess: boolean; storefront: { id: string; name: string; slug: string; status: string } | null; subscription: { active: boolean; reason: string | null; status: string; planName: string | null; currentPeriodEnd: Date | null } | null };
 
@@ -39,6 +39,7 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
   const [open, setOpen] = useState(false);
   const isPlatformAdmin = user.platformRole === "SUPER_ADMIN";
   const currentPage = navigation.find(({ href }) => href === "/dashboard" ? pathname === href : pathname.startsWith(href))?.label ?? "Workspace";
+  const visibleNavigation = navigation.filter(({ permission, platformOnly }) => (!platformOnly || isPlatformAdmin) && (!permission || capabilities.includes(permission)));
 
   const sidebar = (
     <div className="flex h-full flex-col">
@@ -53,12 +54,15 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
         {!isPlatformAdmin && workspace.storefront && <Link href={(workspace.storefront.status === "ACTIVE" && workspace.subscription?.active ? `/store/${workspace.storefront.slug}` : `/preview/${workspace.storefront.id}`) as never} target="_blank" className="mt-3 flex items-center justify-between rounded-xl bg-[#eaf2e6] px-3 py-2 text-xs font-black text-[#164b36]">{workspace.storefront.status === "ACTIVE" && workspace.subscription?.active ? "View public website" : "Preview website"}<ExternalLink className="size-3.5" /></Link>}
       </div>
       <nav className="mt-5 flex-1 space-y-1 overflow-y-auto px-3">
-        {navigation.filter(({ permission, platformOnly }) => (!platformOnly || isPlatformAdmin) && (!permission || capabilities.includes(permission))).map(({ label, href, icon: Icon }) => {
+        {visibleNavigation.map(({ label, href, icon: Icon, group }, index) => {
           const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
           return (
-            <Link key={href} href={href as never} data-active={active} onClick={() => setOpen(false)} className={cn("dashboard-nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition", active ? "bg-[#eaf2e6] text-[#164b36]" : "text-[#657169] hover:bg-[#f4f6f3] hover:text-[#10231a]") }>
-              <Icon className="size-[18px]" /><span className="flex-1">{!isPlatformAdmin && label === "Businesses" ? "Brand profile" : label}</span>
-            </Link>
+            <Fragment key={href}>
+              {(index === 0 || visibleNavigation[index - 1]?.group !== group) && <p className="dashboard-nav-group">{group}</p>}
+              <Link href={href as never} data-active={active} onClick={() => setOpen(false)} className={cn("dashboard-nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition", active ? "bg-[#eaf2e6] text-[#164b36]" : "text-[#657169] hover:bg-[#f4f6f3] hover:text-[#10231a]") }>
+                <Icon className="size-[18px]" /><span className="flex-1">{!isPlatformAdmin && label === "Businesses" ? "Brand profile" : label}</span>
+              </Link>
+            </Fragment>
           );
         })}
       </nav>
