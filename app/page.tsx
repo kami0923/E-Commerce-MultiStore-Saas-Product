@@ -28,7 +28,7 @@ export default async function HomePage() {
   const stores = await getMarketplaceStores();
   const categories = [...new Set(stores.map(store => store.vertical))];
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f3f3ed] text-[#10231a]">
+    <main className="meridian-home min-h-screen overflow-hidden bg-[#f3f3ed] text-[#10231a]">
       <div className="relative border-b border-[#d8ddd5]">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -right-24 top-0 size-[40rem] rounded-full bg-[#c9f269]/25 blur-[110px]" />

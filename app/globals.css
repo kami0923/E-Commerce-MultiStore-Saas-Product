@@ -475,3 +475,453 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Meridian 02 — a shared kinetic design language for public and operational surfaces. */
+:root {
+  --meridian-ink: #071a12;
+  --meridian-paper: #f2f2ea;
+  --meridian-acid: #c9ff4f;
+  --meridian-violet: #7457ff;
+  --meridian-coral: #ff775f;
+  --meridian-cyan: #7de7dc;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--meridian-violet) 65%, white);
+  outline-offset: 3px;
+}
+
+.meridian-home {
+  --home-ink: #071a12;
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 88% 4%, rgb(201 255 79 / 28%), transparent 27rem),
+    linear-gradient(115deg, #f7f7f0 0%, #eceee7 100%);
+}
+
+.meridian-home::before,
+.meridian-dashboard::before,
+.storefront::before {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  content: "";
+  pointer-events: none;
+  opacity: .045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+}
+
+.meridian-home h1,
+.meridian-home h2,
+.meridian-dashboard h1,
+.storefront h1,
+.storefront h2 {
+  text-wrap: balance;
+}
+
+.meridian-home nav a,
+.meridian-home section a,
+.meridian-dashboard a,
+.meridian-dashboard button {
+  position: relative;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .meridian-home nav a::after {
+    position: absolute;
+    right: 0;
+    bottom: -.35rem;
+    left: 0;
+    height: 2px;
+    content: "";
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform .35s cubic-bezier(.2,.8,.2,1);
+  }
+
+  .meridian-home nav a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+.meridian-dashboard {
+  background:
+    radial-gradient(circle at 92% 3%, rgb(201 255 79 / 16%), transparent 28rem),
+    linear-gradient(135deg, #f7f8f4, #edf0e9 65%, #f5f1ec);
+}
+
+.meridian-dashboard > aside {
+  border-right-color: rgb(7 26 18 / 10%);
+  background: rgb(250 251 247 / 90%);
+  box-shadow: 18px 0 70px rgb(7 26 18 / 5%);
+  backdrop-filter: blur(24px);
+}
+
+.meridian-dashboard > header {
+  background: rgb(247 249 244 / 75%);
+}
+
+.meridian-dashboard main article,
+.meridian-dashboard main > div > div.rounded-\[24px\],
+.meridian-dashboard main > div > div > article {
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease, border-color .35s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .meridian-dashboard main article:hover {
+    border-color: rgb(116 87 255 / 22%);
+    box-shadow: 0 24px 64px rgb(7 26 18 / 8%);
+    transform: translateY(-3px);
+  }
+}
+
+.storefront {
+  position: relative;
+}
+
+.storefront-header {
+  box-shadow: 0 1px 0 rgb(7 26 18 / 4%);
+}
+
+.storefront-brand p:first-child {
+  transition: letter-spacing .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .storefront-brand:hover p:first-child {
+    letter-spacing: .085em;
+  }
+
+  .storefront-product-card:hover .storefront-product-quick-add {
+    filter: drop-shadow(0 12px 20px rgb(7 26 18 / 18%));
+  }
+}
+
+.product-depth-rail {
+  position: relative;
+  overflow: hidden;
+  min-height: 760px;
+  padding: clamp(4.5rem, 8vw, 8rem) 1.25rem;
+  color: white;
+  background:
+    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--store-highlight) 32%, transparent), transparent 38rem),
+    color-mix(in srgb, var(--store-accent) 90%, #020905);
+}
+
+.product-depth-rail::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0, transparent calc(12.5% - 1px), rgb(255 255 255 / 5%) 12.5%);
+}
+
+.product-depth-rail-heading {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  width: min(1320px, 100%);
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin: 0 auto 2rem;
+}
+
+.product-depth-rail-heading p {
+  font-size: .65rem;
+  font-weight: 900;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 46%);
+}
+
+.product-depth-rail-heading h2 {
+  margin-top: .6rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.6rem, 6vw, 6.2rem);
+  font-weight: 400;
+  line-height: .92;
+  letter-spacing: -.055em;
+}
+
+.product-depth-rail-controls {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.product-depth-rail-controls span {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-right: .8rem;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: rgb(255 255 255 / 50%);
+}
+
+.product-depth-rail-controls svg {
+  width: 1rem;
+}
+
+.product-depth-rail-controls button {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 999px;
+  color: white;
+  background: rgb(255 255 255 / 7%);
+  transition: transform .25s ease, color .25s ease, background .25s ease;
+}
+
+.product-depth-rail-controls button:hover {
+  color: var(--store-accent);
+  background: white;
+  transform: scale(1.06);
+}
+
+.product-depth-stage {
+  position: relative;
+  width: min(1320px, 100%);
+  height: 490px;
+  margin: 0 auto;
+  perspective: 1400px;
+  outline: none;
+}
+
+.product-depth-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  overflow: hidden;
+  width: clamp(220px, 25vw, 350px);
+  height: clamp(350px, 37vw, 500px);
+  border: 1px solid rgb(255 255 255 / 17%);
+  border-radius: max(.5rem, var(--store-radius));
+  color: white;
+  background: #142019;
+  box-shadow: 0 35px 90px rgb(0 0 0 / 28%);
+  opacity: calc(1 - min(var(--rail-distance), 3) * .2);
+  transform:
+    translate(-50%, -50%)
+    translateX(calc(var(--rail-offset) * clamp(155px, 18vw, 285px)))
+    translateZ(calc(var(--rail-distance) * -150px))
+    rotateY(calc(var(--rail-offset) * -11deg))
+    scale(calc(1 - min(var(--rail-distance), 3) * .09));
+  transition: transform .75s cubic-bezier(.16,1,.3,1), opacity .55s ease, filter .55s ease;
+  filter: saturate(calc(1 - min(var(--rail-distance), 2) * .18));
+}
+
+.product-depth-card[data-active="true"] {
+  box-shadow: 0 45px 120px rgb(0 0 0 / 42%);
+}
+
+.product-depth-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background-position: center;
+  background-size: cover;
+  transition: transform 1s cubic-bezier(.2,.8,.2,1);
+}
+
+.product-depth-card::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(180deg, rgb(0 0 0 / 4%) 30%, rgb(0 0 0 / 90%));
+}
+
+.product-depth-card:hover .product-depth-image {
+  transform: scale(1.045);
+}
+
+.product-depth-index,
+.product-depth-copy,
+.product-depth-open {
+  position: absolute;
+  z-index: 2;
+}
+
+.product-depth-index {
+  top: 1rem;
+  left: 1rem;
+  padding: .45rem .65rem;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 999px;
+  font-size: .6rem;
+  font-weight: 900;
+  background: rgb(0 0 0 / 18%);
+  backdrop-filter: blur(10px);
+}
+
+.product-depth-copy {
+  right: 1.35rem;
+  bottom: 1.35rem;
+  left: 1.35rem;
+}
+
+.product-depth-copy small,
+.product-depth-copy strong,
+.product-depth-copy b {
+  display: block;
+}
+
+.product-depth-copy small {
+  font-size: .57rem;
+  font-weight: 900;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 52%);
+}
+
+.product-depth-copy strong {
+  max-width: 12ch;
+  margin-top: .5rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 2.6vw, 2.2rem);
+  font-weight: 400;
+  line-height: .98;
+}
+
+.product-depth-copy b {
+  margin-top: .9rem;
+  font-size: .75rem;
+}
+
+.product-depth-open {
+  right: 1rem;
+  bottom: 1rem;
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--store-accent);
+  background: white;
+  opacity: 0;
+  transform: translateY(.5rem);
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+.product-depth-open svg {
+  width: 1rem;
+}
+
+.product-depth-card[data-active="true"]:hover .product-depth-open,
+.product-depth-card[data-active="true"]:focus-visible .product-depth-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.product-depth-card[data-active="true"] .product-depth-copy {
+  padding-right: 2.5rem;
+}
+
+.product-depth-progress {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  width: min(420px, 80%);
+  gap: .35rem;
+  margin: 2.4rem auto 0;
+}
+
+.product-depth-progress button {
+  height: 3px;
+  flex: 1;
+  border: 0;
+  background: rgb(255 255 255 / 18%);
+  transition: background .3s ease, transform .3s ease;
+}
+
+.product-depth-progress button.is-active {
+  background: var(--store-highlight);
+  transform: scaleY(2);
+}
+
+@supports (animation-timeline: view()) {
+  .meridian-home > section,
+  .storefront > section:not(.storefront-hero),
+  .storefront > .product-depth-rail {
+    animation: section-materialize both linear;
+    animation-timeline: view();
+    animation-range: entry 4% cover 28%;
+  }
+
+  @keyframes section-materialize {
+    from {
+      opacity: .15;
+      transform: translateY(80px) scale(.965);
+      filter: blur(9px);
+      clip-path: inset(8% 4% 8% 4% round 2rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: none;
+      clip-path: inset(0 0 0 0 round 0);
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .product-depth-rail {
+    min-height: 650px;
+    padding: 4rem 1rem 3.5rem;
+  }
+
+  .product-depth-rail-heading {
+    align-items: flex-start;
+  }
+
+  .product-depth-rail-controls span {
+    display: none;
+  }
+
+  .product-depth-rail-controls button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .product-depth-stage {
+    height: 410px;
+  }
+
+  .product-depth-card {
+    width: min(72vw, 290px);
+    height: 410px;
+    transform:
+      translate(-50%, -50%)
+      translateX(calc(var(--rail-offset) * 70vw))
+      translateZ(calc(var(--rail-distance) * -120px))
+      rotateY(calc(var(--rail-offset) * -8deg))
+      scale(calc(1 - min(var(--rail-distance), 2) * .12));
+  }
+
+  .product-depth-open {
+    opacity: 1;
+    transform: none;
+  }
+
+  .storefront-product-quick-add {
+    pointer-events: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-depth-card {
+    transition: none;
+  }
+}

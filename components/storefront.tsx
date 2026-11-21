@@ -8,7 +8,7 @@ import { StorefrontProductGallery } from "@/components/storefront-product-galler
 import { StorefrontHeroSlider } from "@/components/storefront-hero-slider";
 import { StorefrontMobileMenu } from "@/components/storefront-mobile-menu";
 import { OrderTracker } from "@/components/order-tracker";
-import { formatMoney } from "@/lib/utils";
+import { ProductDepthRail } from "@/components/product-depth-rail";
 
 type StorefrontData = NonNullable<Awaited<ReturnType<typeof import("@/data/storefront").getStorefrontPreview>>>;
 type StorefrontProductData = NonNullable<Awaited<ReturnType<typeof import("@/data/storefront").getPublishedProduct>>>;
@@ -171,6 +171,7 @@ export function Storefront({ store, preview = false }: { store: StorefrontData; 
       <div className="storefront-hero-media overflow-hidden rounded-b-[var(--store-radius)] lg:rounded-r-[var(--store-radius)] lg:rounded-bl-none"><StorefrontHeroSlider images={config.images} name={store.tenant.name} accent={theme.accent} /></div>
     </section>
     <section className="storefront-collection-section bg-[var(--store-accent)] px-5 py-16 text-white sm:px-8"><div className="mx-auto max-w-7xl"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[.22em] text-white/60">Explore by collection</p><h2 className="mt-3 font-serif text-4xl">{config.collectionTitle}</h2></div><Link href={`${base}/collections` as never} className="flex items-center gap-2 text-sm font-bold">View all collections <ArrowRight className="size-4" /></Link></div><div className="mt-9"><Collections store={store} /></div></div></section>
+    {store.products.length > 0 && <ProductDepthRail products={store.products} storeSlug={store.slug} currency={store.currency} fallbackImages={config.images} />}
     <section className="storefront-products-section px-5 py-20 sm:px-8"><div className="mx-auto max-w-7xl"><div className="text-center"><p className="text-xs font-black uppercase tracking-[.22em] opacity-45">New arrivals</p><h2 className="mt-3 font-serif text-4xl sm:text-5xl">The latest from {store.tenant.name}</h2></div><div className="mt-12"><ProductGrid store={store} /></div></div></section>
     <section className="storefront-philosophy border-y border-black/10 bg-white/45 px-5 py-20 text-center sm:px-8"><div className="mx-auto max-w-3xl"><p className="text-xs font-black uppercase tracking-[.22em] opacity-45">Our philosophy</p><blockquote className="mt-6 font-serif text-3xl leading-tight sm:text-5xl">“{config.philosophy}”</blockquote><Link href={`${base}/about` as never} className="mt-8 inline-flex items-center gap-2 text-sm font-bold">Read our story <ArrowRight className="size-4" /></Link></div></section>
   </StoreShell>;

@@ -16,11 +16,21 @@ export type CommerceModuleState = {
 };
 
 const id = z.string().min(1);
-const money = z.coerce.number().finite().min(0);
+const money = z.preprocess(
+  value => typeof value === "string" && value.trim() === "" ? undefined : value,
+  z.coerce.number().finite().min(0),
+);
 const optionalText = (maximum: number) => z.string().trim().max(maximum).optional();
 
 function optionalMoney(value: FormDataEntryValue | null) {
   return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function commerceDatabaseMessage(error: unknown, subject: "product" | "variant") {
+  const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+  if (code === "P2002") return `This SKU is already used by another ${subject} in this business. Enter a different SKU.`;
+  if (code === "P2003") return "A selected category, image, or store is no longer available. Refresh the page and choose it again.";
+  return `The ${subject} could not be saved because the database rejected part of the request. No data was changed; refresh and try again.`;
 }
 
 function storefrontPaths() {
@@ -130,6 +140,8 @@ export async function createProductAction(_state: CommerceModuleState, formData:
     const validMedia = await db.mediaAsset.count({ where: { id: { in: value.mediaIds }, tenantId: value.tenantId, storeId: value.storeId } });
     if (validMedia !== new Set(value.mediaIds).size) return { status: "error", message: "One or more selected images are outside this store." };
   }
+  const existingSku = await db.productVariant.findFirst({ where: { tenantId: value.tenantId, sku: value.sku }, select: { id: true } });
+  if (existingSku) return { status: "error", errors: { sku: ["This SKU is already used within this business."] } };
 
   try {
     await db.$transaction(async (tx) => {
@@ -160,8 +172,8 @@ export async function createProductAction(_state: CommerceModuleState, formData:
         },
       });
     });
-  } catch {
-    return { status: "error", message: "The product could not be created. Check that the SKU is unique within the business." };
+  } catch (error) {
+    return { status: "error", message: commerceDatabaseMessage(error, "product") };
   }
 
   revalidatePath("/dashboard/catalog");
@@ -194,6 +206,8 @@ export async function addVariantAction(_state: CommerceModuleState, formData: Fo
   const scope = await requireTenantPermission(value.tenantId, "products.manage", value.storeId);
   const product = await db.product.findFirst({ where: { id: value.productId, tenantId: value.tenantId, storeId: value.storeId, status: { not: "ARCHIVED" } }, select: { id: true, name: true } });
   if (!product) return { status: "error", message: "The product is unavailable or archived." };
+  const existingSku = await db.productVariant.findFirst({ where: { tenantId: value.tenantId, sku: value.sku }, select: { id: true } });
+  if (existingSku) return { status: "error", errors: { sku: ["This SKU is already used within this business."] } };
 
   try {
     await db.$transaction(async (tx) => {
@@ -215,8 +229,8 @@ export async function addVariantAction(_state: CommerceModuleState, formData: Fo
         },
       });
     });
-  } catch {
-    return { status: "error", message: "The variant could not be added. Check that its SKU is unique within the business." };
+  } catch (error) {
+    return { status: "error", message: commerceDatabaseMessage(error, "variant") };
   }
 
   revalidatePath("/dashboard/catalog");
@@ -285,6 +299,8 @@ export async function updateVariantAction(_state: CommerceModuleState, formData:
   const scope = await requireTenantPermission(value.tenantId, "products.manage", value.storeId);
   const variant = await db.productVariant.findFirst({ where: { id: value.variantId, productId: value.productId, tenantId: value.tenantId, product: { storeId: value.storeId, status: { not: "ARCHIVED" } } }, select: { id: true, title: true, active: true, product: { select: { name: true } } } });
   if (!variant) return { status: "error", message: "The variant is unavailable or archived." };
+  const existingSku = await db.productVariant.findFirst({ where: { tenantId: value.tenantId, sku: value.sku, id: { not: value.variantId } }, select: { id: true } });
+  if (existingSku) return { status: "error", errors: { sku: ["This SKU is already used within this business."] } };
   if (variant.active && !value.active) {
     const activeCount = await db.productVariant.count({ where: { productId: value.productId, active: true } });
     if (activeCount <= 1) return { status: "error", message: "Keep at least one active variant. Make the product a draft if it should not be sold." };
@@ -294,7 +310,7 @@ export async function updateVariantAction(_state: CommerceModuleState, formData:
       db.productVariant.update({ where: { id: variant.id }, data: { title: value.title, sku: value.sku, priceMinor: Math.round(value.price * 100), compareAtMinor: value.compareAt === undefined ? null : Math.round(value.compareAt * 100), costMinor: value.cost === undefined ? null : Math.round(value.cost * 100), attributes: variantAttributes(value), active: value.active } }),
       db.auditLog.create({ data: { tenantId: value.tenantId, storeId: value.storeId, actorId: scope.user.id, action: "product.variant_updated", entityType: "ProductVariant", entityId: variant.id, summary: `Updated ${variant.title} on ${variant.product.name}`, changes: { title: value.title, sku: value.sku, active: value.active, priceMinor: Math.round(value.price * 100) } } }),
     ]);
-  } catch { return { status: "error", message: "The variant could not be updated. Check that the SKU is unique within the business." }; }
+  } catch (error) { return { status: "error", message: commerceDatabaseMessage(error, "variant") }; }
   revalidatePath("/dashboard/catalog");
   storefrontPaths();
   return { status: "success", message: `${value.title} was updated.` };

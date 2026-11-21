@@ -72,7 +72,7 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
   );
 
   return (
-    <div className="min-h-screen bg-[#f5f7f4] md:pl-[260px]">
+    <div className="meridian-dashboard min-h-screen bg-[#f5f7f4] md:pl-[260px]">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] border-r border-[#e4e9e4] bg-white md:block">{sidebar}</aside>
       {open && <><button aria-label="Close navigation" className="fixed inset-0 z-40 bg-[#10231a]/30 backdrop-blur-sm md:hidden" onClick={() => setOpen(false)} /><aside className="fixed inset-y-0 left-0 z-50 w-[280px] bg-white shadow-2xl md:hidden">{sidebar}</aside></>}
       <header className="sticky top-0 z-30 flex h-[76px] items-center gap-4 border-b border-[#e4e9e4]/80 bg-[#f5f7f4]/85 px-4 backdrop-blur-xl sm:px-7">
