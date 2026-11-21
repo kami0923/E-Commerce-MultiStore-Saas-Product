@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { Activity, AlertTriangle, Banknote, BarChart3, Bell, Boxes, Building2, ChevronDown, ClipboardCheck, ClipboardList, CreditCard, ExternalLink, Gauge, Headphones, Images, LayoutDashboard, LockKeyhole, LogOut, Menu, MessageCircle, Settings2, ShieldCheck, Store, Truck, Users, Warehouse, X } from "lucide-react";
 import { Fragment, useState } from "react";
@@ -35,6 +35,11 @@ const navigation = [
 
 type Workspace = { name: string; subtitle: string; initials: string; scopeLabel: string; platformAccess: boolean; storefront: { id: string; name: string; slug: string; status: string } | null; subscription: { active: boolean; reason: string | null; status: string; planName: string | null; currentPeriodEnd: Date | null } | null };
 
+function NavigationPendingIndicator() {
+  const { pending } = useLinkStatus();
+  return <span aria-hidden="true" className="dashboard-nav-pending" data-pending={pending ? "true" : "false"} />;
+}
+
 export function DashboardShell({ children, user, capabilities, workspace }: { children: React.ReactNode; user: { name: string; email: string; platformRole: string }; capabilities: Permission[]; workspace: Workspace }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -61,7 +66,7 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
             <Fragment key={href}>
               {(index === 0 || visibleNavigation[index - 1]?.group !== group) && <p className="dashboard-nav-group">{group}</p>}
               <Link href={href as never} data-active={active} onClick={() => setOpen(false)} className={cn("dashboard-nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition", active ? "bg-[#eaf2e6] text-[#164b36]" : "text-[#657169] hover:bg-[#f4f6f3] hover:text-[#10231a]") }>
-                <Icon className="size-[18px]" /><span className="flex-1">{!isPlatformAdmin && label === "Businesses" ? "Brand profile" : label}</span>
+                <Icon className="size-[18px]" /><span className="flex-1">{!isPlatformAdmin && label === "Businesses" ? "Brand profile" : label}</span><NavigationPendingIndicator />
               </Link>
             </Fragment>
           );

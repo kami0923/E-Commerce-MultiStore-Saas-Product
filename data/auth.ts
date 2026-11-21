@@ -88,7 +88,7 @@ export async function requireAnyTenantPermission(permission: Permission) {
   return { user, tenantId: membership.tenantId, role: membership.role, platformAccess: false };
 }
 
-export async function getCurrentPermissions() {
+export const getCurrentPermissions = cache(async () => {
   const user = await requireUser();
   if (user.platformRole === "SUPER_ADMIN") return [...permissions];
   const memberships = await db.membership.findMany({
@@ -96,9 +96,9 @@ export async function getCurrentPermissions() {
     select: { role: true },
   });
   return [...new Set(memberships.flatMap(({ role }) => permissionsForRole(role)))];
-}
+});
 
-export async function getAuthorizedStoreScope(permission: Permission) {
+export const getAuthorizedStoreScope = cache(async (permission: Permission) => {
   const user = await requireUser();
   if (user.platformRole === "SUPER_ADMIN") {
     return { user, platformAccess: true as const, fullTenantIds: [] as string[], storeIds: [] as string[] };
@@ -120,9 +120,9 @@ export async function getAuthorizedStoreScope(permission: Permission) {
 
   if (permitted.length === 0) throw new Error("Forbidden: you do not have access to this area.");
   return { user, platformAccess: false as const, fullTenantIds, storeIds };
-}
+});
 
-export async function getDashboardWorkspace() {
+export const getDashboardWorkspace = cache(async () => {
   const user = await requireUser();
   if (user.platformRole === "SUPER_ADMIN") {
     return {
@@ -162,4 +162,4 @@ export async function getDashboardWorkspace() {
     storefront: membership.tenant.stores[0] ?? null,
     subscription: { ...subscriptionAccess, status: membership.tenant.subscription?.status ?? "UNASSIGNED", planName: membership.tenant.subscription?.plan.name ?? null, currentPeriodEnd: membership.tenant.subscription?.currentPeriodEnd ?? null },
   };
-}
+});

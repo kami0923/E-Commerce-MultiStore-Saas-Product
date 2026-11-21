@@ -33,7 +33,9 @@ export function ProductDepthRail({ products, storeSlug, currency, fallbackImages
       const rect = rail.getBoundingClientRect();
       const distance = Math.max(1, rail.offsetHeight - window.innerHeight);
       const progress = Math.min(1, Math.max(0, -rect.top / distance));
-      setActive(Math.round(progress * (looks.length - 1)));
+      rail.style.setProperty("--rail-progress", progress.toFixed(4));
+      const next = Math.round(progress * (looks.length - 1));
+      setActive(current => current === next ? current : next);
     };
     const onScroll = () => { if (!frame) frame = window.requestAnimationFrame(update); };
     update();
