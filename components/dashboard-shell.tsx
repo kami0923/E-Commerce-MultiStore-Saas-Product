@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { signOutAction } from "@/app/(auth)/actions";
 import type { Permission } from "@/lib/permissions";
 import { DashboardCommandPalette } from "@/components/dashboard-command-palette";
+import { ThemeModeToggle } from "@/components/theme-mode-toggle";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard, group: "Command" },
@@ -85,6 +86,7 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
         <button aria-label="Open navigation" onClick={() => setOpen(true)} className="grid size-10 place-items-center rounded-xl bg-white shadow-sm md:hidden"><Menu className="size-5" /></button>
         <div className="hidden min-w-0 flex-1 items-center gap-4 sm:flex"><div className="dashboard-breadcrumb"><small>{workspace.name}</small><b>{currentPage}</b></div><DashboardCommandPalette placeholder={isPlatformAdmin ? "Search businesses, stores, orders…" : `Search ${workspace.name}…`} /></div>
         <div className="ml-auto flex items-center gap-2">
+          <ThemeModeToggle className="dashboard-theme-toggle" />
           <button className="dashboard-top-action hidden rounded-xl border border-[#dfe5df] bg-white px-3.5 py-2.5 text-xs font-bold text-[#506057] sm:block">EN · PKR</button>
           <button aria-label="Notifications" className="dashboard-top-action relative grid size-11 place-items-center rounded-xl border border-[#dfe5df] bg-white text-[#506057]"><Bell className="size-[18px]" /><span className="absolute right-2.5 top-2.5 size-2 rounded-full border-2 border-white bg-[#f07c53]" /></button>
         </div>

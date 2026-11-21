@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, ArrowRight, BarChart3, Boxes, Check, ChevronRight, Globe2, ShieldCheck, ShoppingBag, Sparkles, Store, UsersRound } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { getMarketplaceStores } from "@/data/marketplace";
+import { ThemeModeToggle } from "@/components/theme-mode-toggle";
 
 const capabilities = [
   { icon: Store, number: "01", title: "Launch any retail vertical", text: "Clothing, footwear, jewellery, cosmetics, or a composed multi-category storefront—without rebuilding the operating system." },
@@ -44,6 +45,7 @@ export default async function HomePage() {
             <a href="#architecture" className="transition hover:text-[#10231a]">Architecture</a>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeModeToggle className="meridian-home-theme-toggle" />
             <Link href="/apply" className="hidden h-12 items-center rounded-full border border-[#c5cec3] bg-white/70 px-5 text-sm font-black transition hover:-translate-y-0.5 hover:bg-white sm:inline-flex">
               Apply as merchant
             </Link>

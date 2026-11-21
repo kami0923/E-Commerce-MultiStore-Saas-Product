@@ -1413,3 +1413,136 @@ body { overflow-x: clip; }
   .product-depth-orbit, .product-depth-card[data-active="true"] .product-depth-image { animation: none; }
   .product-depth-card, .storefront-product-card, .meridian-dashboard * { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+/* Persistent colour mode shared by Meridian, every tenant and every workspace. */
+html[data-color-mode="light"] { color-scheme: light; }
+html[data-color-mode="dark"] { color-scheme: dark; }
+body { transition: background-color .35s ease, color .35s ease; }
+
+.theme-mode-toggle {
+  display: inline-grid;
+  flex: none;
+  height: 2.75rem;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+.theme-mode-toggle-track {
+  position: relative;
+  display: grid;
+  width: 4.45rem;
+  height: 2.5rem;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  border: 1px solid rgb(16 35 26 / 14%);
+  border-radius: 999px;
+  color: #617067;
+  background: rgb(255 255 255 / 68%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%), 0 8px 24px rgb(16 35 26 / 8%);
+  backdrop-filter: blur(18px);
+  transition: border-color .3s ease, color .3s ease, background .3s ease, box-shadow .3s ease;
+}
+.theme-mode-toggle svg { z-index: 2; width: .9rem; height: .9rem; margin-inline: auto; transition: color .3s ease, transform .35s cubic-bezier(.16,1,.3,1); }
+.theme-mode-toggle-thumb {
+  position: absolute;
+  top: .22rem;
+  left: .22rem;
+  width: 1.94rem;
+  height: 1.94rem;
+  border-radius: 50%;
+  background: #c9f269;
+  box-shadow: 0 7px 18px rgb(58 92 42 / 25%);
+  transition: transform .45s cubic-bezier(.16,1,.3,1), background .3s ease, box-shadow .3s ease;
+}
+.theme-mode-toggle[data-current-mode="dark"] .theme-mode-toggle-thumb { transform: translateX(1.99rem); background: #7af6d0; box-shadow: 0 0 24px rgb(61 255 204 / 26%); }
+.theme-mode-toggle[data-current-mode="light"] .theme-mode-sun,
+.theme-mode-toggle[data-current-mode="dark"] .theme-mode-moon { color: #10231a; transform: rotate(8deg) scale(1.06); }
+.theme-mode-toggle:hover .theme-mode-toggle-track { border-color: rgb(75 139 106 / 35%); box-shadow: 0 10px 30px rgb(16 35 26 / 13%); }
+.theme-mode-toggle:focus-visible { outline: 2px solid #73c596; outline-offset: 3px; }
+.global-theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 80; }
+body:has(.meridian-home, .storefront, .meridian-dashboard, .auth-layout, .branded-auth-layout) > .global-theme-toggle { display: none; }
+
+/* Dashboard light mode keeps the same command-centre architecture. */
+html[data-color-mode="light"] .meridian-dashboard {
+  --dash-surface: rgb(255 255 255 / 78%);
+  --dash-surface-strong: rgb(255 255 255 / 94%);
+  --dash-line: rgb(25 72 52 / 11%);
+  --dash-muted: #6d7c74;
+  --dash-text: #10231a;
+  color: var(--dash-text);
+  background: radial-gradient(circle at 90% 0%, rgb(201 242 105 / 28%), transparent 30rem), radial-gradient(circle at 18% 70%, rgb(109 220 190 / 14%), transparent 32rem), #f2f5f1;
+}
+html[data-color-mode="light"] .meridian-dashboard::after { background-image: linear-gradient(rgb(16 35 26 / 3.5%) 1px, transparent 1px), linear-gradient(90deg, rgb(16 35 26 / 3.5%) 1px, transparent 1px); }
+html[data-color-mode="light"] .meridian-dashboard > .dashboard-sidebar { border-color: var(--dash-line); color: #10231a; background: linear-gradient(180deg, rgb(255 255 255 / 96%), rgb(244 248 244 / 97%)); box-shadow: 24px 0 80px rgb(29 63 44 / 8%); }
+html[data-color-mode="light"] .dashboard-sidebar > div > div:first-child a { color: #10231a; }
+html[data-color-mode="light"] .dashboard-sidebar .dashboard-workspace { border-color: var(--dash-line) !important; background: linear-gradient(145deg, rgb(220 249 235 / 70%), rgb(240 235 255 / 65%)) !important; box-shadow: inset 0 1px 0 white; }
+html[data-color-mode="light"] .dashboard-sidebar .dashboard-nav-link { color: #637269 !important; }
+html[data-color-mode="light"] .dashboard-sidebar .dashboard-nav-link:hover { color: #10231a !important; background: linear-gradient(90deg, rgb(77 203 163 / 11%), rgb(132 91 255 / 6%)) !important; }
+html[data-color-mode="light"] .dashboard-sidebar .dashboard-nav-link[data-active="true"] { color: #103a2a !important; background: linear-gradient(90deg, rgb(111 231 190 / 24%), rgb(201 242 105 / 20%)) !important; box-shadow: inset 0 0 0 1px rgb(40 134 99 / 12%), 0 10px 30px rgb(37 91 66 / 8%); }
+html[data-color-mode="light"] .dashboard-sidebar .dashboard-user-card { border-color: rgb(27 89 65 / 12%); color: white; background: linear-gradient(135deg, #164b36, #213f56) !important; }
+html[data-color-mode="light"] .meridian-dashboard > .dashboard-topbar { border-color: var(--dash-line); color: #10231a; background: rgb(246 249 246 / 78%); box-shadow: 0 16px 50px rgb(26 67 48 / 7%); }
+html[data-color-mode="light"] .dashboard-top-action,
+html[data-color-mode="light"] .dashboard-command-trigger { border-color: rgb(24 70 50 / 12%) !important; color: #52635a !important; background: rgb(255 255 255 / 78%) !important; box-shadow: inset 0 1px 0 white, 0 10px 28px rgb(22 64 45 / 7%) !important; }
+html[data-color-mode="light"] .dashboard-command-trigger:hover,
+html[data-color-mode="light"] .dashboard-top-action:hover { color: #10231a !important; border-color: rgb(42 139 101 / 25%) !important; box-shadow: 0 12px 30px rgb(24 90 62 / 12%) !important; }
+html[data-color-mode="light"] .dashboard-breadcrumb small { color: #738178; }
+html[data-color-mode="light"] .meridian-dashboard .dashboard-main :where(article, section, div)[class*="bg-white"] { border-color: var(--dash-line) !important; color: #10231a; background: linear-gradient(145deg, rgb(255 255 255 / 92%), rgb(247 250 247 / 85%)) !important; box-shadow: inset 0 1px 0 white, 0 20px 60px rgb(29 70 51 / 8%); }
+html[data-color-mode="light"] .meridian-dashboard .dashboard-main :where(article, section, div)[class*="bg-[#f"] { border-color: var(--dash-line) !important; background: rgb(246 249 246 / 86%) !important; }
+html[data-color-mode="light"] .meridian-dashboard .dashboard-main :where([class*="border-[#e"], [class*="border-[#d"]) { border-color: var(--dash-line) !important; }
+html[data-color-mode="light"] .meridian-dashboard .dashboard-main :where([class*="text-[#7"], [class*="text-[#8"], [class*="text-[#9"], [class*="text-[#6"]) { color: #6b7971 !important; }
+html[data-color-mode="light"] .meridian-dashboard .dashboard-main :where([class*="text-[#164b36]"], [class*="text-[#4e7841]"]) { color: #16563b !important; }
+html[data-color-mode="light"] .meridian-dashboard .dashboard-main :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { border-color: rgb(25 72 52 / 14%) !important; color: #10231a !important; background: rgb(255 255 255 / 88%) !important; color-scheme: light; }
+html[data-color-mode="light"] .meridian-dashboard .dashboard-main :where(input, textarea)::placeholder { color: #88958e; }
+
+/* Dark storefront mode adapts every generated store without replacing its brand identity. */
+html[data-color-mode="dark"] .storefront { color: #edf9f3 !important; background: #07100d !important; }
+html[data-color-mode="dark"] .storefront:not([data-theme="noir"]):not([data-theme="luxe"]) .storefront-header { border-color: rgb(255 255 255 / 10%) !important; color: #edf9f3; background: rgb(7 16 13 / 88%) !important; }
+html[data-color-mode="dark"] .storefront .storefront-announcement { border-color: rgb(255 255 255 / 8%); }
+html[data-color-mode="dark"] .storefront :where([class*="bg-white"]):not(.storefront-product-quick-add) { border-color: rgb(255 255 255 / 11%) !important; color: #edf9f3; background-color: rgb(13 29 24 / 88%) !important; }
+html[data-color-mode="dark"] .storefront :where([class*="border-black"]) { border-color: rgb(255 255 255 / 13%) !important; }
+html[data-color-mode="dark"] .storefront :where([class*="text-black/"]) { color: rgb(231 247 239 / 58%) !important; }
+html[data-color-mode="dark"] .storefront :where(input, select, textarea) { border-color: rgb(255 255 255 / 13%) !important; color: #effbf5 !important; background: rgb(4 14 11 / 72%) !important; color-scheme: dark; }
+html[data-color-mode="dark"] .storefront-hero-copy,
+html[data-color-mode="dark"] .storefront-product-info,
+html[data-color-mode="dark"] .storefront-purchase-panel { border-color: rgb(255 255 255 / 10%) !important; }
+html[data-color-mode="dark"] .storefront[data-theme="canvas"] .storefront-hero-copy { background: rgb(13 29 24 / 78%); }
+html[data-color-mode="dark"] .storefront-product-card { background-color: rgb(12 26 22 / 82%); }
+html[data-color-mode="dark"] .storefront-product-card:hover { box-shadow: 0 35px 90px rgb(0 0 0 / 48%), 0 0 45px color-mix(in srgb, var(--store-highlight) 10%, transparent); }
+html[data-color-mode="dark"] .storefront-cart-drawer { color: #edf9f3; background: #07100d !important; }
+html[data-color-mode="dark"] .storefront-cart-drawer :where([class*="border-black"]) { border-color: rgb(255 255 255 / 12%) !important; }
+html[data-color-mode="dark"] .storefront-cart-drawer :where([class*="text-black/"]) { color: rgb(232 247 240 / 55%) !important; }
+html[data-color-mode="dark"] .storefront-cart-drawer > div:last-child { border-color: rgb(255 255 255 / 10%) !important; background: #0c1a15 !important; }
+
+/* Meridian public site and account screens. */
+html[data-color-mode="dark"] .meridian-home { color: #edfff7 !important; background: #040b08 !important; }
+html[data-color-mode="dark"] .meridian-home > div:first-child { border-color: rgb(255 255 255 / 10%) !important; }
+html[data-color-mode="dark"] .meridian-home :where([class*="bg-white"]) { border-color: rgb(255 255 255 / 11%) !important; color: #edfff7; background-color: rgb(13 29 24 / 82%) !important; }
+html[data-color-mode="dark"] .meridian-home :where([class*="border-[#c"], [class*="border-[#d"], [class*="border-[#e"]) { border-color: rgb(255 255 255 / 12%) !important; }
+html[data-color-mode="dark"] .meridian-home :where([class*="text-[#6"], [class*="text-[#7"], [class*="text-[#8"]):not([class*="text-[#c9f269]"]) { color: #91a89d !important; }
+html[data-color-mode="dark"] .meridian-home :where([class*="bg-[#f8"], [class*="bg-[#f3"], [class*="bg-[#f5"], [class*="bg-[#ea"]) { color: #edfff7; background-color: #0d1c17 !important; }
+html[data-color-mode="dark"] .auth-layout { color: #edfff7; background: #020806; }
+html[data-color-mode="dark"] .auth-layout > div:last-child { border-color: rgb(255 255 255 / 10%); background: #07100d; }
+html[data-color-mode="dark"] .auth-form-panel { color: #edfff7; background: radial-gradient(circle at 90% 8%, rgb(122 246 208 / 8%), transparent 23rem); }
+html[data-color-mode="dark"] .auth-form-panel :where([class*="bg-white"]) { border-color: rgb(255 255 255 / 11%) !important; color: #edfff7; background-color: rgb(15 31 26 / 90%) !important; }
+html[data-color-mode="dark"] .auth-form-panel :where([class*="text-[#6"], [class*="text-[#7"], [class*="text-[#8"] ) { color: #92a79d !important; }
+html[data-color-mode="dark"] .auth-form-panel :where(input) { border-color: rgb(255 255 255 / 13%) !important; color: #effff8 !important; background: #07130f !important; color-scheme: dark; }
+html[data-color-mode="dark"] .merchant-signin-layout > div:nth-of-type(3),
+html[data-color-mode="dark"] .branded-auth-layout > div:nth-of-type(2) { border-color: rgb(255 255 255 / 10%) !important; color: #edfff7; background: #07100d !important; }
+html[data-color-mode="dark"] .merchant-signin-layout :where([class*="bg-white"]),
+html[data-color-mode="dark"] .branded-auth-layout :where([class*="bg-white"]) { border-color: rgb(255 255 255 / 11%) !important; color: #edfff7; background-color: rgb(15 31 26 / 90%) !important; }
+html[data-color-mode="dark"] .merchant-signin-layout :where([class*="text-[#5"], [class*="text-[#6"], [class*="text-[#7"]),
+html[data-color-mode="dark"] .branded-auth-layout :where([class*="text-black/"]) { color: #92a79d !important; }
+html[data-color-mode="dark"] .branded-auth-layout :where(input) { border-color: rgb(255 255 255 / 13%) !important; color: #effff8 !important; background: #07130f !important; color-scheme: dark; }
+
+html[data-color-mode="dark"] .theme-mode-toggle-track { border-color: rgb(122 246 208 / 17%); color: #99b6aa; background: rgb(8 23 18 / 82%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%), 0 10px 28px rgb(0 0 0 / 24%); }
+
+@media (max-width: 520px) {
+  .theme-mode-toggle-track { width: 2.65rem; }
+  .theme-mode-toggle-track svg { display: none; }
+  .theme-mode-toggle-thumb { left: .22rem; }
+  .theme-mode-toggle[data-current-mode="dark"] .theme-mode-toggle-thumb { transform: translateX(.2rem); }
+}

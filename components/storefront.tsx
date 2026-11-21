@@ -10,6 +10,7 @@ import { StorefrontMobileMenu } from "@/components/storefront-mobile-menu";
 import { OrderTracker } from "@/components/order-tracker";
 import { ProductDepthRail } from "@/components/product-depth-rail";
 import { getStorefrontTheme } from "@/lib/storefront-themes";
+import { ThemeModeToggle } from "@/components/theme-mode-toggle";
 
 type StorefrontData = NonNullable<Awaited<ReturnType<typeof import("@/data/storefront").getStorefrontPreview>>>;
 type StorefrontProductData = NonNullable<Awaited<ReturnType<typeof import("@/data/storefront").getPublishedProduct>>>;
@@ -128,7 +129,7 @@ function StoreShell({ store, preview, children }: { store: StorefrontData; previ
         <StorefrontMobileMenu base={base} brand={store.tenant.name} descriptor={config.descriptor} navigation={nav} />
         <Link href={base as never} className="storefront-brand min-w-0"><p className="truncate font-serif text-xl font-semibold tracking-[.04em] sm:text-2xl">{store.tenant.name}</p><p className="mt-0.5 text-[9px] font-bold uppercase tracking-[.28em] opacity-55">{config.descriptor}</p></Link>
         <nav className="storefront-nav ml-12 hidden items-center gap-1 text-[11px] font-black uppercase tracking-[.13em] lg:flex">{nav.map(([label, page]) => <Link key={page} href={`${base}/${page}` as never} className="rounded-full px-4 py-3 transition">{label}</Link>)}</nav>
-        <div className="storefront-actions ml-auto flex items-center gap-2"><Link href={`${base}/shop` as never} aria-label="Search products" className="grid size-10 place-items-center rounded-full transition"><Search className="size-[18px]" /></Link><CartTrigger /></div>
+        <div className="storefront-actions ml-auto flex items-center gap-1 sm:gap-2"><ThemeModeToggle className="storefront-theme-toggle" /><Link href={`${base}/shop` as never} aria-label="Search products" className="grid size-10 place-items-center rounded-full transition"><Search className="size-[18px]" /></Link><CartTrigger /></div>
       </div>
     </header>
     {children}

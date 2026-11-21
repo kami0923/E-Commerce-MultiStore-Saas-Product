@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft, Check, Layers3, LockKeyhole, ShieldCheck, Store } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { ThemeModeToggle } from "@/components/theme-mode-toggle";
 
 export function AuthLayout({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children: React.ReactNode }) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#10231a] px-4 py-4 text-[#10231a] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+    <main className="auth-layout relative min-h-screen overflow-hidden bg-[#10231a] px-4 py-4 text-[#10231a] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
       <div className="pointer-events-none absolute -left-40 -top-52 size-[38rem] rounded-full bg-[#3d7657]/35 blur-[110px]" />
       <div className="pointer-events-none absolute -bottom-56 -right-36 size-[42rem] rounded-full bg-[#c9f269]/14 blur-[120px]" />
 
@@ -32,9 +33,9 @@ export function AuthLayout({ eyebrow, title, description, children }: { eyebrow:
           </div>
         </section>
 
-        <section className="relative flex items-center justify-center px-5 py-8 sm:px-10 lg:px-14 xl:px-20">
+        <section className="auth-form-panel relative flex items-center justify-center px-5 py-8 sm:px-10 lg:px-14 xl:px-20">
           <div className="absolute left-6 top-6 lg:hidden"><BrandMark /></div>
-          <Link href="/" aria-label="Back to platform" className="absolute right-6 top-7 grid size-10 place-items-center rounded-full border border-[#dce2da] bg-white text-[#647168] transition hover:text-[#10231a] lg:hidden"><ArrowLeft className="size-4" /></Link>
+          <div className="absolute right-6 top-7 flex items-center gap-2"><ThemeModeToggle className="auth-theme-toggle" /><Link href="/" aria-label="Back to platform" className="grid size-10 place-items-center rounded-full border border-[#dce2da] bg-white text-[#647168] transition hover:text-[#10231a] lg:hidden"><ArrowLeft className="size-4" /></Link></div>
           <div className="w-full max-w-[510px] pt-20 lg:pt-0">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#e9f1e3] px-3 py-2 text-[10px] font-black uppercase tracking-[.17em] text-[#47705a]"><span className="size-1.5 rounded-full bg-[#79a95e]" />{eyebrow}</div>
             <h1 className="mt-6 text-4xl font-black leading-[.98] tracking-[-.06em] sm:text-5xl xl:text-[3.7rem]">{title}</h1>
