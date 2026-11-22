@@ -8,6 +8,15 @@ import { LoadingWindow, type LoadingWindowIdentity } from "@/components/loading-
 type Phase = "closed" | "loading" | "opening";
 
 const defaultIdentity: LoadingWindowIdentity = { name: "Meridian", theme: "meridian", accent: "#0b2b22", surface: "#78d9d3", ink: "#f0fff9", highlight: "#c9f269" };
+export const loadingIdentityStorageKey = "meridian-loading-identity";
+
+function rememberIdentity(identity: LoadingWindowIdentity) {
+  try {
+    localStorage.setItem(loadingIdentityStorageKey, JSON.stringify(identity));
+  } catch {
+    // Loading remains functional when storage is unavailable.
+  }
+}
 
 function identityFrom(element?: Element | null): LoadingWindowIdentity {
   const scope = element?.closest<HTMLElement>("[data-loading-name]") || document.querySelector<HTMLElement>("[data-loading-name]");
@@ -51,7 +60,9 @@ export function GlobalLoadingCurtain() {
     if (fallbackTimer.current) clearTimeout(fallbackTimer.current);
     if (closeTimer.current) clearTimeout(closeTimer.current);
     startedAt.current = Date.now();
-    setIdentity(nextIdentity || identityFrom());
+    const resolvedIdentity = nextIdentity || identityFrom();
+    rememberIdentity(resolvedIdentity);
+    setIdentity(resolvedIdentity);
     setCurtainPhase("loading");
     fallbackTimer.current = setTimeout(() => {
       setCurtainPhase("opening");
@@ -61,6 +72,12 @@ export function GlobalLoadingCurtain() {
 
   useEffect(() => {
     if (phaseRef.current !== "closed") finish();
+    const frame = requestAnimationFrame(() => {
+      const resolvedIdentity = identityFrom();
+      rememberIdentity(resolvedIdentity);
+      setIdentity(resolvedIdentity);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [finish, pathname]);
 
   useEffect(() => {
