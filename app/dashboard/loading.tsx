@@ -1,5 +1,5 @@
-import { LoadingWindow } from "@/components/loading-window";
-
 export default function DashboardLoading() {
-  return <div className="route-loading-curtain route-loading-dashboard"><LoadingWindow label="Opening your window" compact /></div>;
+  // GlobalLoadingCurtain already carries the active workspace identity during
+  // client navigation. A second branded curtain here causes a Meridian flash.
+  return null;
 }
