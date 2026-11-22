@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeModeToggle } from "@/components/theme-mode-toggle";
+import { GlobalLoadingCurtain } from "@/components/global-loading-curtain";
 
 export const metadata: Metadata = {
   title: {
@@ -14,9 +15,9 @@ const colorModeScript = `(function(){try{var stored=localStorage.getItem("meridi
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <head><script dangerouslySetInnerHTML={{ __html: colorModeScript }} /></head>
-      <body><ThemeModeToggle className="global-theme-toggle" />{children}</body>
+      <body><GlobalLoadingCurtain /><ThemeModeToggle className="global-theme-toggle" />{children}</body>
     </html>
   );
 }

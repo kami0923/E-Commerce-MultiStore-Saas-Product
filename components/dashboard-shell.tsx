@@ -88,8 +88,8 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
       <aside className="dashboard-sidebar fixed inset-y-0 left-0 z-40 hidden w-[272px] border-r border-[#e4e9e4] bg-white md:block">{sidebar}</aside>
       {open && <><button aria-label="Close navigation" className="fixed inset-0 z-40 bg-[#020907]/70 backdrop-blur-sm md:hidden" onClick={() => setOpen(false)} /><aside className="dashboard-sidebar fixed inset-y-0 left-0 z-50 w-[292px] bg-white shadow-2xl md:hidden">{sidebar}</aside></>}
       <header className="dashboard-topbar sticky top-0 z-30 flex h-[76px] items-center gap-4 border-b border-[#e4e9e4]/80 bg-[#f5f7f4]/85 px-4 backdrop-blur-xl sm:px-7">
-        <button aria-label="Open navigation" onClick={() => setOpen(true)} className="grid size-10 place-items-center rounded-xl bg-white shadow-sm md:hidden"><Menu className="size-5" /></button>
-        <div className="hidden min-w-0 flex-1 items-center gap-4 sm:flex"><div className="dashboard-breadcrumb"><small>{workspace.name}</small><b>{currentPage}</b></div><DashboardCommandPalette placeholder={isPlatformAdmin ? "Search businesses, stores, orders…" : `Search ${workspace.name}…`} /></div>
+        <button aria-label="Open navigation" onClick={() => setOpen(true)} className="dashboard-mobile-menu-trigger grid size-10 place-items-center rounded-xl shadow-sm md:hidden"><Menu className="size-5" /></button>
+        <div className="dashboard-topbar-search hidden min-w-0 flex-1 items-center gap-4 sm:flex"><div className="dashboard-breadcrumb"><small>{workspace.name}</small><b>{currentPage}</b></div><DashboardCommandPalette placeholder={isPlatformAdmin ? "Search businesses, stores, orders…" : `Search ${workspace.name}…`} /></div>
         <div className="ml-auto flex items-center gap-2">
           <ThemeModeToggle className="dashboard-theme-toggle" />
           <button className="dashboard-top-action hidden rounded-xl border border-[#dfe5df] bg-white px-3.5 py-2.5 text-xs font-bold text-[#506057] sm:block">EN · PKR</button>
