@@ -2043,3 +2043,14 @@ html[data-color-mode="light"] .meridian-dashboard .dashboard-main :where(button,
   .route-loading-curtain .loading-window-shutter-left { transform: translateX(-101%); }
   .route-loading-curtain .loading-window-shutter-right { transform: translateX(101%); }
 }
+
+
+/* Keep storefront form copy readable regardless of the selected site theme. */
+html[data-color-mode="dark"] .storefront :where(input, textarea)::placeholder {
+  color: #86a299 !important;
+  opacity: 1;
+}
+html[data-color-mode="light"] .storefront :where(input, textarea)::placeholder {
+  color: #68776f !important;
+  opacity: 1;
+}
