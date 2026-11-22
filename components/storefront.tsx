@@ -121,7 +121,7 @@ function StoreShell({ store, preview, children }: { store: StorefrontData; previ
   const base = `/store/${store.slug}`;
   const nav = [["Shop", "shop"], ["Collections", "collections"], ["Our story", "about"], ["Track order", "track"]] as const;
   const vars = { "--store-accent": theme.accent, "--store-soft": theme.surface, "--store-ink": theme.ink, "--store-radius": theme.radius, "--store-highlight": theme.highlight } as CSSProperties;
-  return <StorefrontCartProvider storeId={store.id} storeSlug={store.slug} accent={theme.accent}><main style={vars} data-theme={store.themeKey} data-variant={getStoreVariant(store.id)} className="storefront min-h-screen bg-[var(--store-soft)] text-[var(--store-ink)]">
+  return <StorefrontCartProvider storeId={store.id} storeSlug={store.slug} accent={theme.accent}><main style={vars} data-theme={store.themeKey} data-variant={getStoreVariant(store.id)} data-loading-name={store.name} data-loading-theme={store.themeKey} data-loading-accent={theme.accent} data-loading-surface={theme.surface} data-loading-ink={theme.ink} data-loading-highlight={theme.highlight} className="storefront min-h-screen bg-[var(--store-soft)] text-[var(--store-ink)]">
     {preview && <div className="flex items-center justify-center gap-2 bg-[var(--store-accent)] px-4 py-2 text-center text-xs font-bold text-white"><ShieldCheck className="size-3.5" />Private storefront preview · Current status: {store.status}</div>}
     <div className="storefront-announcement"><span>{config.eyebrow}</span><span>Secure checkout · {store.currency}</span></div>
     <header className="storefront-header sticky top-0 z-20 border-b border-black/10 bg-[var(--store-soft)]/90 backdrop-blur-2xl">

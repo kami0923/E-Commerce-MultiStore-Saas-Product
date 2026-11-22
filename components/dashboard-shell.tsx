@@ -84,7 +84,7 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
   );
 
   return (
-    <div data-platform={isPlatformAdmin ? "true" : "false"} className="meridian-dashboard min-h-screen bg-[#f5f7f4] md:pl-[272px]">
+    <div data-platform={isPlatformAdmin ? "true" : "false"} data-loading-name={workspace.storefront?.name || workspace.name} data-loading-theme={isPlatformAdmin ? "meridian" : "workspace"} data-loading-accent={isPlatformAdmin ? "#0b2b22" : "#153f68"} data-loading-surface={isPlatformAdmin ? "#78d9d3" : "#8dd9e8"} data-loading-ink="#f0fff9" data-loading-highlight={isPlatformAdmin ? "#c9f269" : "#75ffd2"} className="meridian-dashboard min-h-screen bg-[#f5f7f4] md:pl-[272px]">
       <aside className="dashboard-sidebar fixed inset-y-0 left-0 z-40 hidden w-[272px] border-r border-[#e4e9e4] bg-white md:block">{sidebar}</aside>
       {open && <><button aria-label="Close navigation" className="fixed inset-0 z-40 bg-[#020907]/70 backdrop-blur-sm md:hidden" onClick={() => setOpen(false)} /><aside className="dashboard-sidebar fixed inset-y-0 left-0 z-50 w-[292px] bg-white shadow-2xl md:hidden">{sidebar}</aside></>}
       <header className="dashboard-topbar sticky top-0 z-30 flex h-[76px] items-center gap-4 border-b border-[#e4e9e4]/80 bg-[#f5f7f4]/85 px-4 backdrop-blur-xl sm:px-7">
