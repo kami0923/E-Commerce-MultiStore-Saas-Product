@@ -476,6 +476,65 @@ a {
   }
 }
 
+/* Collection filters: theme-aware motion with equally clear keyboard and touch states. */
+.storefront-filter-pill {
+  position: relative;
+  isolation: isolate;
+  min-height: 2.65rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--store-ink) 16%, transparent);
+  border-radius: 999px;
+  padding: .66rem 1.15rem;
+  color: color-mix(in srgb, var(--store-ink) 78%, transparent);
+  background: color-mix(in srgb, var(--store-soft) 72%, white 28%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 65%);
+  font-size: .75rem;
+  font-weight: 800;
+  transition: color .28s ease, border-color .28s ease, box-shadow .35s ease, transform .35s cubic-bezier(.2,.8,.2,1);
+}
+.storefront-filter-pill > span { position: relative; z-index: 1; }
+.storefront-filter-pill::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  content: "";
+  background: linear-gradient(115deg, var(--store-accent), color-mix(in srgb, var(--store-accent) 68%, var(--store-highlight)));
+  transform: translateY(108%) scale(.86);
+  transition: transform .38s cubic-bezier(.2,.85,.2,1);
+}
+.storefront-filter-pill::after {
+  position: absolute;
+  inset: -40% auto -40% -30%;
+  z-index: 0;
+  width: 32%;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 48%), transparent);
+  opacity: 0;
+  transform: skewX(-18deg);
+}
+.storefront-filter-pill:hover,
+.storefront-filter-pill:focus-visible,
+.storefront-filter-pill[data-active="true"] {
+  border-color: color-mix(in srgb, var(--store-accent) 75%, white);
+  color: white;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--store-accent) 24%, transparent), inset 0 1px 0 rgb(255 255 255 / 18%);
+  transform: translateY(-3px);
+}
+.storefront-filter-pill:hover::before,
+.storefront-filter-pill:focus-visible::before,
+.storefront-filter-pill[data-active="true"]::before { transform: translateY(0) scale(1); }
+.storefront-filter-pill:hover::after,
+.storefront-filter-pill:focus-visible::after { opacity: 1; animation: storefront-filter-glint .7s ease both; }
+.storefront-filter-pill:focus-visible { outline: 3px solid color-mix(in srgb, var(--store-highlight) 62%, white); outline-offset: 3px; }
+.storefront-filter-pill:active { transform: translateY(-1px) scale(.96); transition-duration: .08s; }
+@keyframes storefront-filter-glint { to { left: 112%; } }
+
+@media (hover: none) {
+  .storefront-filter-pill { min-height: 2.85rem; }
+  .storefront-filter-pill[data-active="true"] { transform: none; }
+}
+
 /* Meridian 05 — cinematic command dashboard inspired by real-time inventory systems. */
 .dashboard-nav-group {
   margin: 1.15rem .65rem .35rem;
