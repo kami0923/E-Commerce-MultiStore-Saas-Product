@@ -39,11 +39,11 @@ export function GlobalLoadingCurtain() {
   const finish = useCallback(() => {
     if (phaseRef.current === "closed") return;
     const elapsed = Date.now() - startedAt.current;
-    const wait = Math.max(0, 680 - elapsed);
+    const wait = Math.max(0, 560 - elapsed);
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = setTimeout(() => {
       setCurtainPhase("opening");
-      closeTimer.current = setTimeout(() => setCurtainPhase("closed"), 620);
+      closeTimer.current = setTimeout(() => setCurtainPhase("closed"), 760);
     }, wait);
   }, [setCurtainPhase]);
 
@@ -55,7 +55,7 @@ export function GlobalLoadingCurtain() {
     setCurtainPhase("loading");
     fallbackTimer.current = setTimeout(() => {
       setCurtainPhase("opening");
-      closeTimer.current = setTimeout(() => setCurtainPhase("closed"), 620);
+      closeTimer.current = setTimeout(() => setCurtainPhase("closed"), 760);
     }, 2600);
   }, [setCurtainPhase]);
 

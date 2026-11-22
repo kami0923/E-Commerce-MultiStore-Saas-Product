@@ -23,14 +23,11 @@ export function LoadingWindow({ label = "Opening your window", compact = false, 
     <div className="loading-window" style={style} data-loader-theme={identity.theme || "meridian"} data-compact={compact ? "true" : "false"} role="status" aria-live="polite">
       <div className="loading-window-frame" aria-hidden="true">
         <div className="loading-window-scene">
-          <span className="loading-window-sun" />
-          <span className="loading-window-cloud loading-window-cloud-one" />
-          <span className="loading-window-cloud loading-window-cloud-two" />
-          <span className="loading-window-building loading-window-building-one" />
-          <span className="loading-window-building loading-window-building-two" />
-          <span className="loading-window-display loading-window-display-one"><i /></span>
-          <span className="loading-window-display loading-window-display-two"><i /></span>
-          <span className="loading-window-rail"><i /><i /><i /></span>
+          <span className="loading-window-ambient" />
+          <span className="loading-window-plane loading-window-plane-one" />
+          <span className="loading-window-plane loading-window-plane-two" />
+          <span className="loading-window-plane loading-window-plane-three" />
+          <span className="loading-window-core"><i>{monogram}</i><small>{identity.name}</small></span>
         </div>
         <span className="loading-window-shutter loading-window-shutter-left"><i>{monogram}</i></span>
         <span className="loading-window-shutter loading-window-shutter-right"><i>{identity.name}</i></span>

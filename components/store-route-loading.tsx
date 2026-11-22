@@ -14,5 +14,5 @@ export function StoreRouteLoading() {
   const name = cleanSlug.split("-").filter(Boolean).map(word => word.length <= 2 ? word.toUpperCase() : `${word[0]?.toUpperCase()}${word.slice(1)}`).join(" ") || "Your store";
   const themeKey = vertical ? verticalThemes[vertical] : "atelier";
   const theme = getStorefrontTheme(themeKey);
-  return <div className="route-loading-curtain"><LoadingWindow label="Preparing your collection" identity={{ name, theme: themeKey, accent: theme.accent, surface: theme.surface, ink: theme.ink, highlight: theme.highlight }} /></div>;
+  return <div className="route-loading-curtain"><LoadingWindow label="Opening your window" identity={{ name, theme: themeKey, accent: theme.accent, surface: theme.surface, ink: theme.ink, highlight: theme.highlight }} /></div>;
 }
