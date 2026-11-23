@@ -9,7 +9,7 @@ import { sendApplicationEmail } from "@/lib/merchant-applications";
 import { getRequestOrigin } from "@/lib/request-origin";
 
 export type OnboardingState = { status: "idle" | "success" | "error"; message?: string };
-const verticalsSchema = z.array(z.enum(["CLOTHING", "SHOES", "JEWELLERY", "COSMETICS", "MULTI_CATEGORY"])).min(1).max(5);
+const verticalsSchema = z.array(z.enum(["CLOTHING", "SHOES", "JEWELLERY", "COSMETICS", "HARDWARE", "MULTI_CATEGORY"])).min(1).max(6);
 
 export async function startApplicationReviewAction(formData: FormData) {
   const actor = await requirePlatformAdmin(); const id = z.string().min(1).parse(formData.get("applicationId"));

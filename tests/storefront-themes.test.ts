@@ -3,7 +3,7 @@ import test from "node:test";
 import { getStorefrontTheme, recommendedTheme, storefrontThemeKeys } from "../lib/storefront-themes.ts";
 
 test("every modern storefront theme exposes a complete visual system", () => {
-  assert.equal(storefrontThemeKeys.length, 9);
+  assert.equal(storefrontThemeKeys.length, 12);
   for (const key of storefrontThemeKeys) {
     const theme = getStorefrontTheme(key);
     assert.ok(theme.label && theme.description);
@@ -19,6 +19,7 @@ test("new stores receive category-aware themes", () => {
   assert.equal(recommendedTheme("JEWELLERY", 0), "noir");
   assert.equal(recommendedTheme("COSMETICS", 0), "canvas");
   assert.equal(recommendedTheme("MULTI_CATEGORY", 0), "market");
+  assert.equal(recommendedTheme("HARDWARE", 0), "forge");
 });
 
 test("unknown persisted themes safely fall back to atelier", () => {

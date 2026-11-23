@@ -26,6 +26,7 @@ enum StoreVertical {
   SHOES
   JEWELLERY
   COSMETICS
+  HARDWARE
   MULTI_CATEGORY
 }
 

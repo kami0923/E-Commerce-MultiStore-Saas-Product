@@ -145,7 +145,7 @@ export const getDashboardWorkspace = cache(async () => {
         select: {
           name: true,
           subscription: { select: { status: true, currentPeriodEnd: true, plan: { select: { name: true } } } },
-          stores: { orderBy: { createdAt: "asc" }, take: 1, select: { id: true, name: true, slug: true, status: true } },
+          stores: { orderBy: { createdAt: "asc" }, take: 1, select: { id: true, name: true, slug: true, status: true, themeKey: true } },
         },
       },
     },

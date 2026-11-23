@@ -24,7 +24,8 @@
     "admin:reset-password": "node scripts/reset-super-admin-password.mjs",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "db:validate": "prisma validate",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "db:provision:showcases": "node scripts/provision-showcase-stores.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1168.0",

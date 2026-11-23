@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { LoadingWindow } from "@/components/loading-window";
 import { getStorefrontTheme, type StorefrontThemeKey } from "@/lib/storefront-themes";
 
-const verticalThemes: Record<string, StorefrontThemeKey> = { clothing: "atelier", shoes: "kinetic", jewellery: "noir", cosmetics: "canvas", "multi-category": "market" };
+const verticalThemes: Record<string, StorefrontThemeKey> = { clothing: "atelier", shoes: "kinetic", jewellery: "noir", cosmetics: "canvas", hardware: "forge", "multi-category": "market" };
 
 export function StoreRouteLoading() {
   const pathname = usePathname();

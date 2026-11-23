@@ -1266,6 +1266,42 @@ html {
 .storefront[data-theme="heritage"] .storefront-hero-copy { border: 1px solid color-mix(in srgb, var(--store-accent) 18%, transparent); }
 .storefront[data-theme="heritage"] .storefront-collection-card { border: .65rem solid color-mix(in srgb, var(--store-highlight) 35%, white); }
 
+/* Forge: a dark industrial showroom with tool-bench geometry. */
+.storefront[data-theme="forge"] { background-color: var(--store-soft); background-image: linear-gradient(rgb(255 180 63 / 4%) 1px, transparent 1px), linear-gradient(90deg, rgb(255 180 63 / 4%) 1px, transparent 1px); background-size: 4rem 4rem; }
+.storefront[data-theme="forge"] .storefront-announcement { color: #11171b; background: var(--store-highlight); }
+.storefront[data-theme="forge"] .storefront-header { border-color: rgb(255 180 63 / 18%); color: var(--store-ink); background: rgb(9 13 16 / 92%); }
+.storefront[data-theme="forge"] .storefront-brand p:first-child, .storefront[data-theme="forge"] .storefront-hero-title { font-family: inherit; font-weight: 950; text-transform: uppercase; }
+.storefront[data-theme="forge"] .storefront-hero { min-height: 780px; gap: 1px; padding: 1px; background: rgb(255 180 63 / 24%); }
+.storefront[data-theme="forge"] .storefront-hero-copy { border-radius: 0; color: var(--store-ink); background: linear-gradient(145deg, rgb(15 21 25 / 98%), rgb(9 13 16 / 94%)); }
+.storefront[data-theme="forge"] .storefront-hero-media { border-radius: 0; clip-path: polygon(7% 0, 100% 0, 100% 100%, 0 100%); }
+.storefront[data-theme="forge"] .storefront-hero-actions a:first-child { color: #12171a; background: var(--store-highlight); box-shadow: 0 0 36px rgb(255 180 63 / 18%); }
+.storefront[data-theme="forge"] .storefront-collection-section { color: var(--store-ink); background: #0d1317; }
+.storefront[data-theme="forge"] .storefront-collection-card { border: 1px solid rgb(255 180 63 / 18%); border-radius: .4rem; box-shadow: 0 20px 70px rgb(0 0 0 / 38%); }
+
+/* Velvet: an immersive midnight beauty salon with rose-glass light. */
+.storefront[data-theme="velvet"] { background: radial-gradient(circle at 80% 8%, rgb(255 143 189 / 14%), transparent 34rem), var(--store-soft); }
+.storefront[data-theme="velvet"] .storefront-announcement { color: #281122; background: linear-gradient(90deg, #ff8fbd, #ffc7dd); }
+.storefront[data-theme="velvet"] .storefront-header { border-color: rgb(255 143 189 / 16%); color: var(--store-ink); background: rgb(16 10 19 / 88%); }
+.storefront[data-theme="velvet"] .storefront-hero { gap: 1.25rem; padding: 1.25rem; grid-template-columns: .9fr 1.1fr; }
+.storefront[data-theme="velvet"] .storefront-hero-copy { border: 1px solid rgb(255 143 189 / 15%); color: var(--store-ink); background: linear-gradient(145deg, rgb(40 17 39 / 90%), rgb(20 11 24 / 88%)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%); }
+.storefront[data-theme="velvet"] .storefront-hero-media { border: 1px solid rgb(255 143 189 / 16%); box-shadow: 0 35px 100px rgb(0 0 0 / 48%), 0 0 70px rgb(255 143 189 / 10%); }
+.storefront[data-theme="velvet"] .storefront-hero-title { color: #fff4fb; text-shadow: 0 0 42px rgb(255 143 189 / 16%); }
+.storefront[data-theme="velvet"] .storefront-collection-section { color: var(--store-ink); background: linear-gradient(180deg, #2a1025, #130b16); }
+.storefront[data-theme="velvet"] .storefront-collection-card { border: 1px solid rgb(255 199 221 / 18%); border-radius: 12rem 12rem 2.6rem 2.6rem; }
+.storefront[data-theme="velvet"] .storefront-philosophy { background: rgb(255 143 189 / 5%); }
+
+/* Midnight: cinematic technical outerwear with luminous trail markers. */
+.storefront[data-theme="midnight"] { background: radial-gradient(circle at 15% 20%, rgb(64 126 255 / 13%), transparent 32rem), var(--store-soft); }
+.storefront[data-theme="midnight"] .storefront-announcement { color: #07101d; background: var(--store-highlight); }
+.storefront[data-theme="midnight"] .storefront-header { border-color: rgb(148 255 114 / 14%); color: var(--store-ink); background: rgb(7 16 29 / 90%); }
+.storefront[data-theme="midnight"] .storefront-hero { min-height: 820px; max-width: none; padding: 1rem; grid-template-columns: .78fr 1.22fr; }
+.storefront[data-theme="midnight"] .storefront-hero-copy { z-index: 2; border: 1px solid rgb(148 255 114 / 13%); color: var(--store-ink); background: linear-gradient(135deg, rgb(9 27 48 / 96%), rgb(7 16 29 / 92%)); }
+.storefront[data-theme="midnight"] .storefront-hero-media { border-radius: calc(var(--store-radius) * .55); clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 100%); }
+.storefront[data-theme="midnight"] .storefront-hero-actions a:first-child { color: #07101d; background: var(--store-highlight); box-shadow: 0 0 42px rgb(148 255 114 / 16%); }
+.storefront[data-theme="midnight"] .storefront-collection-section { color: var(--store-ink); background: #081a2b; }
+.storefront[data-theme="midnight"] .storefront-collection-card { border: 1px solid rgb(148 255 114 / 14%); box-shadow: 0 30px 90px rgb(0 0 0 / 38%); }
+.storefront[data-theme="midnight"] .storefront-collection-card:nth-child(2) { transform: translateY(3rem); }
+
 @media (max-width: 767px) {
   .dashboard-command-backdrop { padding-top: 4rem; }
   .theme-preview-frame.is-tablet, .theme-preview-frame.is-mobile { width: 100%; }
@@ -1277,6 +1313,10 @@ html {
   .storefront[data-theme="noir"] .storefront-hero-copy { justify-content: flex-end; padding: 5rem 1.5rem 3rem; }
   .storefront[data-theme="noir"] .storefront-hero-media::after { background: linear-gradient(0deg, rgb(15 10 7 / 92%), rgb(15 10 7 / 10%) 75%); }
   .storefront[data-theme="canvas"] .storefront-collection-card { border-radius: 12rem 12rem 2rem 2rem; }
+  .storefront[data-theme="forge"] .storefront-hero, .storefront[data-theme="velvet"] .storefront-hero, .storefront[data-theme="midnight"] .storefront-hero { display: flex; min-height: 0; flex-direction: column; }
+  .storefront[data-theme="forge"] .storefront-hero-media, .storefront[data-theme="midnight"] .storefront-hero-media { clip-path: none; }
+  .storefront[data-theme="midnight"] .storefront-collection-card:nth-child(2) { transform: none; }
+  .storefront[data-theme="velvet"] .storefront-collection-card { border-radius: 8rem 8rem 2rem 2rem; }
   .storefront-product-page { padding-bottom: 1rem; }
   .storefront-product-info { min-width: 0; }
   .storefront-purchase-panel { position: relative; z-index: 4; margin-inline: -.35rem; border: 1px solid color-mix(in srgb, var(--store-accent) 13%, transparent); border-radius: 1.35rem; padding: 1rem; background: color-mix(in srgb, var(--store-soft) 82%, white); box-shadow: 0 18px 50px rgb(7 26 18 / 9%); }

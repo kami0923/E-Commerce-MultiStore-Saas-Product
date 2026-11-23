@@ -10,6 +10,8 @@ import { signOutAction } from "@/app/(auth)/actions";
 import type { Permission } from "@/lib/permissions";
 import { DashboardCommandPalette } from "@/components/dashboard-command-palette";
 import { ThemeModeToggle } from "@/components/theme-mode-toggle";
+import { DefaultColorMode } from "@/components/default-color-mode";
+import { isDarkDefaultTheme } from "@/lib/storefront-themes";
 
 const navigation = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard, group: "Command" },
@@ -33,7 +35,7 @@ const navigation = [
   { label: "Account security", href: "/dashboard/security", icon: LockKeyhole, group: "Governance" },
 ] satisfies { label: string; href: string; icon: typeof LayoutDashboard; group: string; permission?: Permission; platformOnly?: boolean }[];
 
-type Workspace = { name: string; subtitle: string; initials: string; scopeLabel: string; platformAccess: boolean; storefront: { id: string; name: string; slug: string; status: string } | null; subscription: { active: boolean; reason: string | null; status: string; planName: string | null; currentPeriodEnd: Date | null } | null };
+type Workspace = { name: string; subtitle: string; initials: string; scopeLabel: string; platformAccess: boolean; storefront: { id: string; name: string; slug: string; status: string; themeKey: string } | null; subscription: { active: boolean; reason: string | null; status: string; planName: string | null; currentPeriodEnd: Date | null } | null };
 
 function NavigationPendingIndicator() {
   const { pending } = useLinkStatus();
@@ -84,7 +86,7 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
   );
 
   return (
-    <div data-platform={isPlatformAdmin ? "true" : "false"} data-loading-name={workspace.storefront?.name || workspace.name} data-loading-theme={isPlatformAdmin ? "meridian" : "workspace"} data-loading-accent={isPlatformAdmin ? "#0b2b22" : "#153f68"} data-loading-surface={isPlatformAdmin ? "#78d9d3" : "#8dd9e8"} data-loading-ink="#f0fff9" data-loading-highlight={isPlatformAdmin ? "#c9f269" : "#75ffd2"} className="meridian-dashboard min-h-screen bg-[#f5f7f4] md:pl-[272px]">
+    <>{workspace.storefront && isDarkDefaultTheme(workspace.storefront.themeKey) && <DefaultColorMode />}<div data-platform={isPlatformAdmin ? "true" : "false"} data-loading-name={workspace.storefront?.name || workspace.name} data-loading-theme={isPlatformAdmin ? "meridian" : workspace.storefront?.themeKey || "workspace"} data-loading-accent={isPlatformAdmin ? "#0b2b22" : "#153f68"} data-loading-surface={isPlatformAdmin ? "#78d9d3" : "#8dd9e8"} data-loading-ink="#f0fff9" data-loading-highlight={isPlatformAdmin ? "#c9f269" : "#75ffd2"} className="meridian-dashboard min-h-screen bg-[#f5f7f4] md:pl-[272px]">
       <aside className="dashboard-sidebar fixed inset-y-0 left-0 z-40 hidden w-[272px] border-r border-[#e4e9e4] bg-white md:block">{sidebar}</aside>
       {open && <><button aria-label="Close navigation" className="fixed inset-0 z-40 bg-[#020907]/70 backdrop-blur-sm md:hidden" onClick={() => setOpen(false)} /><aside className="dashboard-sidebar fixed inset-y-0 left-0 z-50 w-[292px] bg-white shadow-2xl md:hidden">{sidebar}</aside></>}
       <header className="dashboard-topbar sticky top-0 z-30 flex h-[76px] items-center gap-4 border-b border-[#e4e9e4]/80 bg-[#f5f7f4]/85 px-4 backdrop-blur-xl sm:px-7">
@@ -98,6 +100,6 @@ export function DashboardShell({ children, user, capabilities, workspace }: { ch
       </header>
       {!isPlatformAdmin && workspace.subscription && !workspace.subscription.active && <div className="border-b border-[#f0d1c6] bg-[#fff2ec] px-4 py-3 text-[#8f452f] sm:px-7 lg:px-10"><div className="flex items-start gap-3 text-xs leading-5"><AlertTriangle className="mt-0.5 size-4 shrink-0" /><div><b>Workspace is read-only.</b> {workspace.subscription.reason} Existing orders, refunds, reports, and account security remain available.</div></div></div>}
       <main className="dashboard-main px-4 py-7 sm:px-7 lg:px-10 lg:py-9">{children}</main>
-    </div>
+    </div></>
   );
 }

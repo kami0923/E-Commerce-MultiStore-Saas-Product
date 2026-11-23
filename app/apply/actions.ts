@@ -7,7 +7,7 @@ import { applicationReference, createApplicationTrackingToken, sendApplicationEm
 import { getRequestOrigin } from "@/lib/request-origin";
 
 export type ApplicationState = { status: "idle" | "success" | "error"; message?: string; errors?: Record<string, string[]>; trackingUrl?: string; reference?: string };
-const vertical = z.enum(["CLOTHING", "SHOES", "JEWELLERY", "COSMETICS", "MULTI_CATEGORY"]);
+const vertical = z.enum(["CLOTHING", "SHOES", "JEWELLERY", "COSMETICS", "HARDWARE", "MULTI_CATEGORY"]);
 const applicationSchema = z.object({ businessName: z.string().trim().min(2, "Enter your business name.").max(100), ownerName: z.string().trim().min(2, "Enter the owner name.").max(80), ownerEmail: z.email("Enter a valid email address.").trim().toLowerCase(), phone: z.string().trim().max(30).optional(), companyWebsite: z.union([z.literal(""), z.url("Enter a complete website URL, including https://")]).refine(value => value === "" || /^https?:\/\//i.test(value), "Use an http:// or https:// website address.").optional(), description: z.string().trim().min(30, "Tell us at least 30 characters about the business.").max(1000), countryCode: z.enum(["PK", "INTL"]), baseCurrency: z.enum(["PKR", "USD"]), defaultLocale: z.enum(["en", "ur"]), verticals: z.array(vertical).min(1, "Select at least one store category.").max(5), consent: z.literal("on"), companyFax: z.string().max(0).optional() });
 
 export async function submitMerchantApplicationAction(_state: ApplicationState, formData: FormData): Promise<ApplicationState> {

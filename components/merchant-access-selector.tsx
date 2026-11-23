@@ -18,6 +18,7 @@ const labels: Record<string, string> = {
   SHOES: "Shoes & footwear",
   JEWELLERY: "Jewellery & accessories",
   COSMETICS: "Beauty & cosmetics",
+  HARDWARE: "Hardware & tools",
   MULTI_CATEGORY: "Multi-category store",
 };
 

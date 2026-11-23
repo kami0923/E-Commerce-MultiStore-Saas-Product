@@ -5,7 +5,7 @@ import { useActionState, useState } from "react";
 import { submitMerchantApplicationAction, type ApplicationState } from "@/app/apply/actions";
 
 const initial: ApplicationState = { status: "idle" };
-const categories = [["CLOTHING", "Clothing"], ["SHOES", "Shoes"], ["JEWELLERY", "Jewellery"], ["COSMETICS", "Cosmetics"], ["MULTI_CATEGORY", "Multi-category"]] as const;
+const categories = [["CLOTHING", "Clothing"], ["SHOES", "Shoes"], ["JEWELLERY", "Jewellery"], ["COSMETICS", "Cosmetics"], ["HARDWARE", "Hardware"], ["MULTI_CATEGORY", "Multi-category"]] as const;
 const control = "mt-2 h-12 w-full rounded-xl border border-[#dbe3da] bg-white px-4 text-sm outline-none transition focus:border-[#729074] focus:ring-4 focus:ring-[#c9f269]/20";
 
 export function MerchantApplicationForm() {

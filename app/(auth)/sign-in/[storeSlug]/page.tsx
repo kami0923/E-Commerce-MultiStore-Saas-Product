@@ -9,7 +9,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { getMerchantAccessStore } from "@/data/marketplace";
 import { ThemeModeToggle } from "@/components/theme-mode-toggle";
 
-const design: Record<string, { accent: string; deep: string; soft: string }> = { CLOTHING: { accent: "#c8f16a", deep: "#17382a", soft: "#f4f1ea" }, SHOES: { accent: "#f3a65a", deep: "#25211e", soft: "#f3efe9" }, JEWELLERY: { accent: "#e5c07a", deep: "#35281f", soft: "#f6f0e7" }, COSMETICS: { accent: "#ef9aaa", deep: "#4b2932", soft: "#fbf1f2" }, MULTI_CATEGORY: { accent: "#80d5dc", deep: "#173b46", soft: "#eef6f6" } };
+const design: Record<string, { accent: string; deep: string; soft: string }> = { CLOTHING: { accent: "#c8f16a", deep: "#17382a", soft: "#f4f1ea" }, SHOES: { accent: "#f3a65a", deep: "#25211e", soft: "#f3efe9" }, JEWELLERY: { accent: "#e5c07a", deep: "#35281f", soft: "#f6f0e7" }, COSMETICS: { accent: "#ef9aaa", deep: "#4b2932", soft: "#fbf1f2" }, HARDWARE: { accent: "#ffb43f", deep: "#0b1014", soft: "#edf0f1" }, MULTI_CATEGORY: { accent: "#80d5dc", deep: "#173b46", soft: "#eef6f6" } };
 type Props = { params: Promise<{ storeSlug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> { const { storeSlug } = await params; const store = await getMerchantAccessStore(storeSlug); return store ? { title: { absolute: `${store.tenant.name} · Merchant login` }, description: `Secure merchant access for ${store.tenant.name}.`, robots: { index: false, follow: false } } : {}; }
 

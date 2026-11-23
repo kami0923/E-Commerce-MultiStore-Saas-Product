@@ -6,7 +6,7 @@ import { createBusinessAction, type CommerceActionState } from "@/app/dashboard/
 
 const initialState: CommerceActionState = { status: "idle" };
 const verticals = [
-  ["CLOTHING", "Clothing"], ["SHOES", "Shoes"], ["JEWELLERY", "Jewellery"], ["COSMETICS", "Cosmetics"], ["MULTI_CATEGORY", "Multi-category"],
+  ["CLOTHING", "Clothing"], ["SHOES", "Shoes"], ["JEWELLERY", "Jewellery"], ["COSMETICS", "Cosmetics"], ["HARDWARE", "Hardware"], ["MULTI_CATEGORY", "Multi-category"],
 ] as const;
 
 export function BusinessForm() {

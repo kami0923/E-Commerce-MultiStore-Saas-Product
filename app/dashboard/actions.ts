@@ -8,6 +8,7 @@ import { requirePlatformAdmin, requireTenantPermission } from "@/data/auth";
 import { canCreateStore } from "@/data/subscription-limits";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { provisionBusiness } from "@/lib/business-provisioning";
+import { storefrontThemeKeys } from "@/lib/storefront-themes";
 
 export type CommerceActionState = {
   status: "idle" | "error" | "success";
@@ -16,8 +17,8 @@ export type CommerceActionState = {
   invitationUrl?: string;
 };
 
-const vertical = z.enum(["CLOTHING", "SHOES", "JEWELLERY", "COSMETICS", "MULTI_CATEGORY"]);
-const storefrontTheme = z.enum(["atelier", "market", "luxe"]);
+const vertical = z.enum(["CLOTHING", "SHOES", "JEWELLERY", "COSMETICS", "HARDWARE", "MULTI_CATEGORY"]);
+const storefrontTheme = z.enum(storefrontThemeKeys as [string, ...string[]]);
 
 const businessSchema = z.object({
   name: z.string().trim().min(2, "Enter a business name.").max(100),

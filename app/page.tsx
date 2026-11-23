@@ -6,7 +6,7 @@ import { ThemeModeToggle } from "@/components/theme-mode-toggle";
 import { getStorefrontTheme } from "@/lib/storefront-themes";
 
 const capabilities = [
-  { icon: Store, number: "01", title: "Launch any retail vertical", text: "Clothing, footwear, jewellery, cosmetics, or a composed multi-category storefront—without rebuilding the operating system." },
+  { icon: Store, number: "01", title: "Launch any retail vertical", text: "Clothing, footwear, jewellery, cosmetics, hardware, or a composed multi-category storefront—without rebuilding the operating system." },
   { icon: ShieldCheck, number: "02", title: "Keep every tenant private", text: "Membership, permissions, products, customers, orders, media, and reports remain verified inside the correct business boundary." },
   { icon: Globe2, number: "03", title: "Expand without re-platforming", text: "Start with PKR and Pakistan operations, then add USD, multilingual storefronts, domains, branches, and new markets." },
 ];
@@ -23,6 +23,7 @@ const marketplaceFallback: Record<string, string> = {
   SHOES: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=86",
   JEWELLERY: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1200&q=86",
   COSMETICS: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1200&q=86",
+  HARDWARE: "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=1200&q=86",
   MULTI_CATEGORY: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=86",
 };
 

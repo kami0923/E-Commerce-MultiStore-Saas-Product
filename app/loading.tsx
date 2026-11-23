@@ -12,18 +12,18 @@ export default function Loading() {
   const [identity, setIdentity] = useState<LoadingWindowIdentity | null>(null);
 
   useEffect(() => {
+    let nextIdentity = meridianIdentity;
     if (!pathname.startsWith("/dashboard")) {
-      setIdentity(meridianIdentity);
+      queueMicrotask(() => setIdentity(nextIdentity));
       return;
     }
 
     try {
       const stored = localStorage.getItem(loadingIdentityStorageKey);
       const parsed = stored ? JSON.parse(stored) as LoadingWindowIdentity : null;
-      setIdentity(parsed?.name ? parsed : meridianIdentity);
-    } catch {
-      setIdentity(meridianIdentity);
-    }
+      if (parsed?.name) nextIdentity = parsed;
+    } catch { /* Keep the Meridian fallback. */ }
+    queueMicrotask(() => setIdentity(nextIdentity));
   }, [pathname]);
 
   if (!identity) return null;
